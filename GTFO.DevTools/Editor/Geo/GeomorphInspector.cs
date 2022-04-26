@@ -3,7 +3,7 @@ using LevelGeneration;
 using UnityEditor;
 using UnityEngine;
 
-namespace GTFO.DevTools
+namespace GTFO.DevTools.Geo
 {
     public class GeomorphInspector
     {
