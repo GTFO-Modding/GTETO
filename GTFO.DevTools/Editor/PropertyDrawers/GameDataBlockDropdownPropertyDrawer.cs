@@ -17,8 +17,8 @@ namespace GTFO.DevTools.PropertyDrawers
                 Rect contentRect = indentedPosition;
                 contentRect.width = 50f;
                 contentRect.center += new Vector2(itemRect.width, 0f);
-                
-                property.intValue = EditorGUI.IntField(itemRect, label, property.intValue);
+
+                EditorGUI.PropertyField(itemRect, property);
                 if (GUI.Button(contentRect, "Select"))
                 {
                     var prop = property.Copy();

@@ -1,20 +1,20 @@
-﻿using UnityEditor;
+﻿using GTFO.DevTools.Persistent;
+using UnityEditor;
 using UnityEngine;
 
 namespace GTFO.DevTools
 {
     public class RundownToolsWindow : EditorWindow
     {
-        private string m_defaultPath;
         private bool m_autoLoad;
 
         private void OnGUI()
         {
             this.titleContent = Styles.TITLE;
 
-            if (this.m_autoLoad && !GTFOGameConfig.Rundown.Valid)
+            if ((this.m_autoLoad || !string.IsNullOrEmpty(DevToolSettings.Instance.m_rundownPath)) && !GTFOGameConfig.Rundown.Valid)
             {
-                GTFOGameConfig.Rundown.Folder = this.m_defaultPath;
+                GTFOGameConfig.Rundown.Folder = DevToolSettings.Instance.m_rundownPath;
                 GTFOGameConfig.Rundown.Validate();
                 if (!GTFOGameConfig.Rundown.Valid)
                 {
@@ -38,8 +38,8 @@ namespace GTFO.DevTools
                 EditorGUILayout.HelpBox(Styles.ERROR_NO_RUNDOWN);
                 if (GUILayout.Button(Styles.OPEN_RUNDOWN_BUTTON_LABEL))
                 {
-                    string path = EditorUtility.OpenFolderPanel("Select Rundown", this.m_defaultPath ?? Application.dataPath, "");
-                    this.m_defaultPath = path;
+                    string path = EditorUtility.OpenFolderPanel("Select Rundown", DevToolSettings.Instance.m_rundownPath ?? Application.dataPath, "");
+                    DevToolSettings.Instance.m_rundownPath = path;
                     this.m_autoLoad = true;
 
                     GTFOGameConfig.Rundown.Folder = path;
@@ -50,8 +50,8 @@ namespace GTFO.DevTools
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button(Styles.CHANGE_RUNDOWN_BUTTON_LABEL))
             {
-                string path = EditorUtility.OpenFolderPanel("Select Rundown", this.m_defaultPath ?? Application.dataPath, "");
-                this.m_defaultPath = path;
+                string path = EditorUtility.OpenFolderPanel("Select Rundown", DevToolSettings.Instance.m_rundownPath ?? Application.dataPath, "");
+                DevToolSettings.Instance.m_rundownPath = path;
                 this.m_autoLoad = true;
 
                 GTFOGameConfig.Rundown.Folder = path;

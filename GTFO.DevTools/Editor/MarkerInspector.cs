@@ -1,4 +1,6 @@
 ﻿using GameData;
+using GTFO.DevTools.Persistent;
+using GTFO.DevTools.Utilities;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +11,7 @@ using UnityEngine.UIElements;
 
 namespace GTFO.DevTools
 {
+    [CanEditMultipleObjects]
     [CustomEditor(typeof(LG_MarkerProducer), true)]
     public class MarkerInspector : Editor
     {
@@ -23,112 +26,91 @@ namespace GTFO.DevTools
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
+            EditorGUILayout.Space();
+
+            if (this.targets.Length > 1)
+            {
+                var producers = this.targets.Select((t) => (LG_MarkerProducer)t).ToArray();
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Build Random"))
+                {
+                    foreach (var marker in producers)
+                    {
+                        MarkerUtility.SpawnRandomMarkers(marker);
+                    }
+                }
+                if (GUILayout.Button("Clear"))
+                {
+                    foreach (var marker in producers)
+                    {
+                        MarkerUtility.CleanupMarker(marker);
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+                return;
+            }
+
             var producer = (LG_MarkerProducer)this.target;
 
-            this.m_datablock = GetDataBlockForProducer(producer);
+            this.m_datablock = MarkerUtility.GetDataBlockForProducer(producer);
 
             GUI.enabled = this.m_datablock != null;
 
-            if (this.m_datablock != null)
-            {
-                EditorGUILayout.Space();
-                if (GUILayout.Button("Clear"))
-                {
-                    CleanupMarker(producer);
-                }
+            if (this.m_datablock == null) return;
 
-                foreach (var comp in this.m_datablock.CommonData.Compositions)
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("Build Random"))
+            {
+                MarkerUtility.SpawnRandomMarkers(producer);
+            }
+            if (GUILayout.Button("Clear"))
+            {
+                MarkerUtility.CleanupMarker(producer);
+            }
+            EditorGUILayout.EndHorizontal();
+
+            foreach (var comp in this.m_datablock.CommonData.Compositions)
+            {
+                if (!string.IsNullOrWhiteSpace(comp.prefab))
                 {
-                    if (!string.IsNullOrWhiteSpace(comp.prefab))
+                    EditorGUILayout.BeginHorizontal();
+                    Texture2D texture = null;
+                    if (comp.function != ExpeditionFunction.None && !s_functionIconMap.TryGetValue(comp.function, out texture))
                     {
-                        EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.LabelField($"[{comp.function}] {Path.GetFileName(comp.prefab)}");
-                        if (GUILayout.Button("Build", GUILayout.ExpandWidth(false)))
-                        {
-                            CleanupMarker(producer);
-                            var actualPath = Path.Combine("Assets/PrefabInstance", Path.GetFileName(comp.prefab));
-
-                            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(actualPath);
-                            if (prefab != null)
-                            {
-                                var copy = Instantiate(prefab, producer.transform);
-                                copy.transform.localPosition = Vector3.zero;
-                                copy.transform.localRotation = Quaternion.identity;
-                                ContextMenuExtensions.BuildPrefabSpawners(copy);
-                            }
-                        }
-                        EditorGUILayout.EndHorizontal();
+                        string texturePath = "Assets/GTFO.DevTools/Editor/Resources/DevToolMarkers/marker_" + comp.function.ToString().ToLower() + ".png";
+                        texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+                        s_functionIconMap.Add(comp.function, texture);
                     }
+
+                    if (texture)
+                    {
+                        EditorGUILayout.LabelField(new GUIContent(Path.GetFileName(comp.prefab), texture, "Marker Type: " + comp.function.ToString() + "\nWeight: " + comp.weight));
+                    }
+                    else if (comp.function != ExpeditionFunction.None)
+                    {
+                        EditorGUILayout.LabelField(new GUIContent($"[{comp.function}] {Path.GetFileName(comp.prefab)}", "Weight: " + comp.weight));
+                    }
+                    else
+                    {
+                        EditorGUILayout.LabelField(new GUIContent(Path.GetFileName(comp.prefab), "Marker Type: " + comp.function.ToString() + "\nWeight: " + comp.weight));
+                    }
+                    if (GUILayout.Button("Build", GUILayout.ExpandWidth(false)))
+                    {
+                        MarkerUtility.SpawnMarkerComposition(producer, comp);
+                    }
+                    EditorGUILayout.EndHorizontal();
                 }
             }
 
-            
+
         }
 
-        public static IMarkerDataBlock GetDataBlockForProducer(LG_MarkerProducer producer)
+        private static readonly Dictionary<ExpeditionFunction, Texture2D> s_functionIconMap = new Dictionary<ExpeditionFunction, Texture2D>();
+
+        public static void ClearFunctionIconCache()
         {
-            switch (producer.MarkerDataBlockType)
-            {
-                case LG_MarkerDataBlockType.Service:
-                    return GTFOGameConfig.Rundown.DataBlocks.ServiceMarker.GetBlockByID(producer.MarkerDataBlockID);
-                case LG_MarkerDataBlockType.Mining:
-                    return GTFOGameConfig.Rundown.DataBlocks.MiningMarker.GetBlockByID(producer.MarkerDataBlockID);
-                case LG_MarkerDataBlockType.Tech:
-                    return GTFOGameConfig.Rundown.DataBlocks.TechMarker.GetBlockByID(producer.MarkerDataBlockID);
-            }
-            return null;
-        }
-
-        public static void SpawnRandomMarkers(GameObject obj)
-            => SpawnRandomMarkers(obj, new System.Random());
-
-        public static void CleanupMarker(LG_MarkerProducer producer)
-        {
-            if (producer != null && producer.transform.childCount > 0)
-            {
-                DestroyImmediate(producer.transform.GetChild(0).gameObject);
-            }
-        }
-
-        private static void SpawnRandomMarkerComp(LG_MarkerProducer producer, IMarkerDataBlock block, System.Random random)
-        {
-            if (producer == null) return;
-
-            CleanupMarker(producer);
-            var prefabs = block.CommonData.Compositions
-                .Where((c) => c.function != ExpeditionFunction.Strongbox && c.function != ExpeditionFunction.ResourceContainerSecure)
-                .Select((c) => string.IsNullOrEmpty(c.prefab) ? null : Path.Combine("Assets/PrefabInstance", Path.GetFileName(c.prefab)))
-                .Select((p) => p == null ? null : AssetDatabase.LoadAssetAtPath<GameObject>(p))
-                .Where((asset) => asset != null)
-                .ToArray();
-
-            if (prefabs.Length == 0)
-                return;
-
-
-            var prefab = prefabs[random.Next(prefabs.Length)];
-            if (prefab == null)
-                return;
-
-            var copy = Instantiate(prefab, producer.transform);
-            copy.transform.localPosition = Vector3.zero;
-            copy.transform.localRotation = Quaternion.identity;
-            ContextMenuExtensions.BuildPrefabSpawners(copy);
-
-            for (int childIndex = 0, childCount = copy.transform.childCount; childIndex < childCount; childIndex++)
-            {
-                SpawnRandomMarkers(copy.transform.GetChild(childIndex).gameObject, random);
-            }
-        }
-
-        public static void SpawnRandomMarkers(GameObject obj, System.Random random)
-        {
-            foreach (var marker in obj.GetComponentsInChildren<LG_MarkerProducer>())
-            {
-                var block = GetDataBlockForProducer(marker);
-                if (block != null)
-                    SpawnRandomMarkerComp(marker, GetDataBlockForProducer(marker), random);
-            }
+            s_functionIconMap.Clear();
         }
 
         private static Color markerCol = new Color(1, 1, 1, 0.5f);
@@ -139,7 +121,7 @@ namespace GTFO.DevTools
                GizmoType.Pickable)]
         private static void DrawMarkerGizmo(LG_MarkerProducer marker, GizmoType gizmoType)
         {
-            if (!GeomorphToolWindow.DrawMarkers) return;
+            if (!DevToolSettings.Instance.m_showMarkers) return;
             IMarkerDataBlock datablock = null;
             switch (marker.MarkerDataBlockType)
             {
@@ -169,7 +151,7 @@ namespace GTFO.DevTools
             if (!s_meshes.TryGetValue(meshPath, out var mesh)) // fetch from dictionary cache
             {
                 var obj = AssetDatabase.LoadAssetAtPath<GameObject>(meshPath);
-                if (obj.TryGetComponent(out MeshFilter meshFilter))
+                if (obj != null && obj.TryGetComponent(out MeshFilter meshFilter))
                 {
                     mesh = meshFilter.sharedMesh;
                 }
