@@ -6,26 +6,36 @@ namespace GTFO.DevTools
 {
     public class RundownToolsWindow : EditorWindow
     {
-        private bool m_autoLoad;
+        private void OnAssemblyReloaded()
+        {
+            string currentFolder = GTFOGameConfig.Rundown.Folder;
+            string settingsFolder = DevToolSettings.Instance.m_rundownPath;
+
+            if (currentFolder != settingsFolder)
+            {
+                GTFOGameConfig.Rundown.Folder = settingsFolder;
+            }
+            GTFOGameConfig.Rundown.Validate();
+            if (GTFOGameConfig.Rundown.Valid)
+            {
+                GTFOGameConfig.Rundown.LoadBlocks();
+            }
+        }
+
+        private void OnEnable()
+        {
+            AssemblyReloadEvents.afterAssemblyReload += this.OnAssemblyReloaded;
+        }
+
+        private void OnDisable()
+        {
+            AssemblyReloadEvents.afterAssemblyReload -= this.OnAssemblyReloaded;
+        }
+
 
         private void OnGUI()
         {
             this.titleContent = Styles.TITLE;
-
-            if ((this.m_autoLoad || !string.IsNullOrEmpty(DevToolSettings.Instance.m_rundownPath)) && !GTFOGameConfig.Rundown.Valid)
-            {
-                GTFOGameConfig.Rundown.Folder = DevToolSettings.Instance.m_rundownPath;
-                GTFOGameConfig.Rundown.Validate();
-                if (!GTFOGameConfig.Rundown.Valid)
-                {
-                    this.m_autoLoad = false;
-
-                }
-                else
-                {
-                    GTFOGameConfig.Rundown.LoadBlocks();
-                }
-            }
 
             if (GTFOGameConfig.Rundown.ValidAndLoaded)
             {
@@ -36,39 +46,38 @@ namespace GTFO.DevTools
             if (!GTFOGameConfig.Rundown.Valid)
             {
                 EditorGUILayout.HelpBox(Styles.ERROR_NO_RUNDOWN);
-                if (GUILayout.Button(Styles.OPEN_RUNDOWN_BUTTON_LABEL))
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button(Styles.OPEN_RUNDOWN_BUTTON_LABEL) && this.ChangeRundown())
                 {
-                    string path = EditorUtility.OpenFolderPanel("Select Rundown", DevToolSettings.Instance.m_rundownPath ?? Application.dataPath, "");
-                    DevToolSettings.Instance.m_rundownPath = path;
-                    this.m_autoLoad = true;
-
-                    GTFOGameConfig.Rundown.Folder = path;
-                    GTFOGameConfig.Rundown.Validate();
+                    GTFOGameConfig.Rundown.LoadBlocks();
                 }
+                if (GUILayout.Button(Styles.REFRESH_RUNDOWN_BUTTON_LABEL) && this.RefreshRundown())
+                {
+                    GTFOGameConfig.Rundown.LoadBlocks();
+                }
+                EditorGUILayout.EndHorizontal();
                 return;
             }
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button(Styles.CHANGE_RUNDOWN_BUTTON_LABEL))
             {
-                string path = EditorUtility.OpenFolderPanel("Select Rundown", DevToolSettings.Instance.m_rundownPath ?? Application.dataPath, "");
-                DevToolSettings.Instance.m_rundownPath = path;
-                this.m_autoLoad = true;
-
-                GTFOGameConfig.Rundown.Folder = path;
-                GTFOGameConfig.Rundown.Validate();
-                if (!GTFOGameConfig.Rundown.Valid)
+                if (this.ChangeRundown())
+                {
+                    GTFOGameConfig.Rundown.LoadBlocks();
+                }
+                else
+                {
                     return;
+                }
             }
 
-            if (GUILayout.Button(Styles.LOAD_RUNDOWN_BUTTON_LABEL))
-            {
-                GTFOGameConfig.Rundown.LoadBlocks();
-            }
-
+            GUI.enabled = false;
             if (GUILayout.Button(Styles.SAVE_RUNDOWN_BUTTON_LABEL))
             {
                 GTFOGameConfig.Rundown.SaveBlocks();
             }
+            GUI.enabled = true;
+
             EditorGUILayout.EndHorizontal();
 
             if (!GTFOGameConfig.Rundown.DataBlocks.GameSetup.Loaded)
@@ -77,6 +86,24 @@ namespace GTFO.DevTools
                 return;
             }
             return;
+        }
+
+        private bool ChangeRundown()
+        {
+            string path = EditorUtility.OpenFolderPanel("Select Rundown", DevToolSettings.Instance.m_rundownPath ?? Application.dataPath, "");
+            if (path == null)
+                return false;
+
+            DevToolSettings.Instance.m_rundownPath = path;
+            return this.RefreshRundown();
+        }
+
+        private bool RefreshRundown()
+        {
+            GTFOGameConfig.Rundown.Folder = DevToolSettings.Instance.m_rundownPath;
+            GTFOGameConfig.Rundown.Validate();
+
+            return GTFOGameConfig.Rundown.Valid;
         }
 
         [MenuItem("Window/Rundown Tools")]
@@ -94,6 +121,7 @@ namespace GTFO.DevTools
         private static class Styles
         {
             public static GUIContent OPEN_RUNDOWN_BUTTON_LABEL;
+            public static GUIContent REFRESH_RUNDOWN_BUTTON_LABEL;
             public static GUIContent CHANGE_RUNDOWN_BUTTON_LABEL;
             public static GUIContent LOAD_RUNDOWN_BUTTON_LABEL;
             public static GUIContent SAVE_RUNDOWN_BUTTON_LABEL;
@@ -106,9 +134,10 @@ namespace GTFO.DevTools
             {
                 TITLE = new GUIContent("Rundown Tools");
                 OPEN_RUNDOWN_BUTTON_LABEL = new GUIContent("Open Rundown");
+                REFRESH_RUNDOWN_BUTTON_LABEL = new GUIContent("Refresh Rundown");
                 CHANGE_RUNDOWN_BUTTON_LABEL = new GUIContent("Change Rundown");
                 LOAD_RUNDOWN_BUTTON_LABEL = new GUIContent("Load Rundown");
-                SAVE_RUNDOWN_BUTTON_LABEL = new GUIContent("Save Rundown");
+                SAVE_RUNDOWN_BUTTON_LABEL = new GUIContent("Save Rundown", "Saving is not supported until Rundown 6.5 Scripts are exported.");
                 ERROR_ICON = EditorGUIUtility.IconContent("console.erroricon");
                 ERROR_NO_RUNDOWN = new GUIContent("No Rundown Loaded", ERROR_ICON.image);
                 ERROR_NOT_LOADED = new GUIContent("Not Loaded", ERROR_ICON.image);
