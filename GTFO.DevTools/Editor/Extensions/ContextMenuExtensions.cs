@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace GTFO.DevTools
+namespace GTFO.DevTools.Extensions
 {
     public class ContextMenuExtensions
     {

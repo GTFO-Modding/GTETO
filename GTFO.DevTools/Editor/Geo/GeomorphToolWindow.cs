@@ -87,7 +87,7 @@ namespace GTFO.DevTools.Geo
             this.m_currentArea = this.m_selectedGameObj == null ? null : this.m_selectedGameObj.GetComponentInParent<LG_Area>();
         }
 
-        [MenuItem("Window/Geomorph Tool")]
+        [MenuItem("Window/GTFO/Geomorph Tool")]
         private static void CreateToolWindowMenuItem()
             => CreateToolWindow();
 

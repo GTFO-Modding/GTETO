@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace GTFO.DevTools
+namespace GTFO.DevTools.Windows
 {
     public class RundownToolsWindow : EditorWindow
     {
@@ -106,7 +106,7 @@ namespace GTFO.DevTools
             return GTFOGameConfig.Rundown.Valid;
         }
 
-        [MenuItem("Window/Rundown Tools")]
+        [MenuItem("Window/GTFO/Rundown Tools")]
         private static void CreateWindowMenuItem()
             => CreateWindow();
 
