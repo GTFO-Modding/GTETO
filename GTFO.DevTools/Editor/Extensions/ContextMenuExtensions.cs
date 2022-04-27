@@ -6,7 +6,6 @@ namespace GTFO.DevTools
 {
     public class ContextMenuExtensions
     {
-
         [MenuItem("GameObject/GTFO/Prefab Spawners/Build Prefab Spawners", false, 0)]
         public static void BuildPrefabSpawners(MenuCommand cmd)
         {
@@ -15,6 +14,7 @@ namespace GTFO.DevTools
 
             PrefabSpawnerUtility.BuildPrefabSpawners(obj);
         }
+
         [MenuItem("GameObject/GTFO/Prefab Spawners/Create Prefab Spawner", false, 0)]
         public static void CreatePrefabSpawner(MenuCommand cmd)
         {
@@ -52,7 +52,6 @@ namespace GTFO.DevTools
             MarkerUtility.CleanupMarkers(obj);
         }
 
-
         [MenuItem("GameObject/GTFO/Preview/Create Preview", false, 0)]
         public static void CreatePreview(MenuCommand cmd)
         {
@@ -62,6 +61,7 @@ namespace GTFO.DevTools
             MarkerUtility.SpawnRandomMarkers(obj);
             PrefabSpawnerUtility.BuildPrefabSpawners(obj);
         }
+
         [MenuItem("GameObject/GTFO/Preview/Clear Preview", false, 0)]
         public static void ClearPreview(MenuCommand cmd)
         {

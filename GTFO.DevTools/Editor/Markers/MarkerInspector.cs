@@ -1,4 +1,5 @@
 ﻿using GameData;
+using GTFO.DevTools.Extensions;
 using GTFO.DevTools.Persistent;
 using GTFO.DevTools.Utilities;
 using System.Collections.Generic;
@@ -70,7 +71,7 @@ namespace GTFO.DevTools
             }
             EditorGUILayout.EndHorizontal();
 
-            foreach (var comp in this.m_datablock.CommonData.Compositions)
+            foreach (var comp in this.m_datablock.GetCommonData().Compositions)
             {
                 if (!string.IsNullOrWhiteSpace(comp.prefab))
                 {
@@ -147,7 +148,7 @@ namespace GTFO.DevTools
             var groupBlock = GTFOGameConfig.Rundown.DataBlocks.MarkerGroup.GetBlockByID(groupID);
             Color color = markerCol;
 
-            string meshPath = "Assets/Resources/" + datablock.CommonData.EditorMesh + ".prefab";
+            string meshPath = "Assets/Resources/" + datablock.GetCommonData().EditorMesh + ".prefab";
             if (!s_meshes.TryGetValue(meshPath, out var mesh)) // fetch from dictionary cache
             {
                 var obj = AssetDatabase.LoadAssetAtPath<GameObject>(meshPath);

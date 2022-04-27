@@ -78,15 +78,12 @@ namespace GTFO.DevTools.Utilities
             //}
 
             var spawners = obj.GetComponentsInChildren<LG_PrefabSpawner>();
-        int spawnerCount = spawners.Length;
+            int spawnerCount = spawners.Length;
             for (int index = 0; index < spawnerCount; index++)
             {
                 var prefabSpawner = spawners[index];
                 progressBarSettings.Update("Build Prefab Spawners", $"Building {prefabSpawner.m_prefab.name}", index, spawnerCount);
-                var initialScale = prefabSpawner.m_prefab.transform.lossyScale;
-                GameObject prefab = GameObject.Instantiate(prefabSpawner.m_prefab, prefabSpawner.transform);
-                prefab.transform.localRotation = Quaternion.identity;
-                prefab.transform.localPosition = Vector3.zero;
+                GameObject prefab = GameObject.Instantiate(prefabSpawner.m_prefab, prefabSpawner.transform.position, prefabSpawner.transform.rotation, prefabSpawner.transform.parent);
                 if (prefabSpawner.m_disableCollision)
                 {
                     Collider[] colliders = prefab.GetComponentsInChildren<Collider>();
@@ -95,10 +92,11 @@ namespace GTFO.DevTools.Utilities
                         collider.enabled = false;
                     }
                 }
-                if (!prefabSpawner.m_applyScale)
+                if (prefabSpawner.m_applyScale)
                 {
-                    prefab.transform.localScale = initialScale;
+                    prefab.transform.localScale = prefabSpawner.transform.localScale;
                 }
+                prefab.transform.SetParent(prefabSpawner.transform);
             }
 
             progressBarSettings.Clear();

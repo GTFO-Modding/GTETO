@@ -22,7 +22,6 @@ namespace GTFO.DevTools.PropertyDrawers
                 if (GUI.Button(contentRect, "Select"))
                 {
                     var prop = property.Copy();
-                    // todo: select data block
                     var datablockType = ((GameDataBlockDropdownAttribute)this.attribute).BlockType;
 
                     SelectDataBlockWindow.ShowWindow((uint)prop.intValue, prop, property.serializedObject, datablockType);
@@ -31,7 +30,7 @@ namespace GTFO.DevTools.PropertyDrawers
             }
             else
             {
-                EditorGUI.LabelField(position, label.text, "Use TextAreaDrawer with string.");
+                EditorGUI.LabelField(position, label.text, "GameDataBlockDropdownPropertyDrawer may only be used on int/uint fields");
             }
         }
     }

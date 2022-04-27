@@ -1,4 +1,5 @@
 ﻿using GameData;
+using GTFO.DevTools.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -66,7 +67,7 @@ namespace GTFO.DevTools.Utilities
             if (producer == null) return;
 
             CleanupMarker(producer);
-            var prefabs = block.CommonData.Compositions
+            var prefabs = block.GetCommonData().Compositions
                 .Where((c) => c.function != ExpeditionFunction.Strongbox && c.function != ExpeditionFunction.ResourceContainerSecure)
                 .Select((c) => string.IsNullOrEmpty(c.prefab) ? null : Path.Combine("Assets/PrefabInstance", Path.GetFileName(c.prefab)))
                 .Select((p) => p == null ? null : AssetDatabase.LoadAssetAtPath<GameObject>(p))
