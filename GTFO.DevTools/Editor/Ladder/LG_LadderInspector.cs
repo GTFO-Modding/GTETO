@@ -1,5 +1,6 @@
 ﻿using Expedition;
 using GTFO.DevTools.Persistent;
+using GTFO.DevTools.Utilities;
 using System;
 using System.IO;
 using UnityEditor;
@@ -153,7 +154,7 @@ namespace GTFO.DevTools.Ladder
                 previewObj.transform.localRotation = Quaternion.identity;
                 previewTrans = previewObj.transform;
             }
-            GameObject piece = Instantiate(obj, ladder.transform.position + Vector3.up * (ladderHeight - height), ladder.transform.rotation, previewTrans);
+            GameObject piece = PreviewUtility.Instantiate(obj, ladder.transform.position + Vector3.up * (ladderHeight - height), ladder.transform.rotation, previewTrans);
             return piece;
         }
 

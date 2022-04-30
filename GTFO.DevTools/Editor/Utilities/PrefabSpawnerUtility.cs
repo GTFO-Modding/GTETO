@@ -21,6 +21,7 @@ namespace GTFO.DevTools.Utilities
             Vector3 rotation = root.localEulerAngles - correspondingRoot.localEulerAngles;
 
             GameObject prefabSpawnerObj = new GameObject("LG_PrefabSpawner_" + obj.name);
+            PreviewUtility.MarkAsEditorOnly(prefabSpawnerObj);
             prefabSpawnerObj.transform.SetParent(root.parent);
             prefabSpawnerObj.transform.localPosition = position;
             prefabSpawnerObj.transform.localScale = scale;
@@ -83,7 +84,7 @@ namespace GTFO.DevTools.Utilities
             {
                 var prefabSpawner = spawners[index];
                 progressBarSettings.Update("Build Prefab Spawners", $"Building {prefabSpawner.m_prefab.name}", index, spawnerCount);
-                GameObject prefab = GameObject.Instantiate(prefabSpawner.m_prefab, prefabSpawner.transform.position, prefabSpawner.transform.rotation, prefabSpawner.transform.parent);
+                GameObject prefab = PreviewUtility.Instantiate(prefabSpawner.m_prefab, prefabSpawner.transform.position, prefabSpawner.transform.rotation, prefabSpawner.transform.parent);
                 if (prefabSpawner.m_disableCollision)
                 {
                     Collider[] colliders = prefab.GetComponentsInChildren<Collider>();

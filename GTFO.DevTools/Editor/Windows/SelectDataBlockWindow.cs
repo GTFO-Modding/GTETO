@@ -24,7 +24,7 @@ namespace GTFO.DevTools.Windows
             var blockInfo = GTFOGameConfig.Rundown.DataBlocks.GetBlock(this.m_type);
             if (blockInfo == null)
                 return;
-            var blocks = (Array)blockInfo.GetType().GetMethod("GetBlocks").Invoke(blockInfo, new object[0]);
+            var blocks = blockInfo.GetBasicBlocks();
 
             var oldColor = GUI.contentColor;
 
@@ -34,30 +34,23 @@ namespace GTFO.DevTools.Windows
 
             foreach (var block in blocks)
             {
-                uint persistentID = (uint)block.GetType().GetProperty("persistentID").GetValue(block);
-                string name = (string)block.GetType().GetProperty("name").GetValue(block);
-                string display = "[" + persistentID + "] " + name;
-                if (!display.Contains(this.m_search))
+                string display = "[" + block.persistentID + "] " + block.name.ToLower();
+                if (!display.Contains(this.m_search.ToLower()))
                     continue;
 
-                bool selected = persistentID == this.m_selectedID ||
+                bool selected = block.persistentID == this.m_selectedID ||
                     name == this.m_selectedName;
-                if (selected)
-                {
-                    GUI.contentColor = new Color(0.5f, 0.5f, 1f);
-                }
-                else
-                {
-                    GUI.contentColor = oldColor;
-                }
+                Color baseColor = block.internalEnabled ? Color.white : new Color(0.5f, 0.5f, 0.5f);
+                Color contentColor = selected ? new Color(0.5f, 0.5f, 1f) : oldColor;
+                GUI.contentColor = baseColor * contentColor;
 
                 EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(display);
+                EditorGUILayout.LabelField(new GUIContent(display, $"{block.blockTypeName}\nName: {block.name}\nPersistent ID: {block.persistentID}\nInternally Enabled: {block.internalEnabled}"));
 
                 if (!selected && GUILayout.Button("Select", GUILayout.ExpandWidth(false)))
                 {
-                    this.m_selectedID = persistentID;
-                    this.m_selectedName = name;
+                    this.m_selectedID = block.persistentID;
+                    this.m_selectedName = block.name;
 
                     if (this.m_saveID)
                     {
@@ -84,6 +77,7 @@ namespace GTFO.DevTools.Windows
             window.m_type = type;
             window.m_obj = obj;
             window.m_saveID = true;
+            window.Show();
         }
     }
 }

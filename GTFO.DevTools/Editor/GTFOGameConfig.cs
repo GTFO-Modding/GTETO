@@ -249,6 +249,8 @@ namespace GTFO.DevTools
         protected abstract void DoSaveAtPath(string path);
         protected abstract void DoUnload();
 
+        public abstract BasicBlockInfo[] GetBasicBlocks();
+
         public string GetBlockPath(string folderPath)
         {
             return Path.Combine(folderPath, "GameData_" + this.BlockName + "_bin.json");
@@ -293,6 +295,28 @@ namespace GTFO.DevTools
         }
     }
 
+    public struct BasicBlockInfo
+    {
+        public readonly string blockTypeName;
+        public readonly string name;
+        public readonly uint persistentID;
+        public readonly bool internalEnabled;
+
+        public BasicBlockInfo(string blockTypeName, string name, uint persistentID, bool internalEnabled)
+        {
+            this.name = name;
+            this.persistentID = persistentID;
+            this.internalEnabled = internalEnabled;
+            this.blockTypeName = blockTypeName;
+        }
+
+        public static BasicBlockInfo From<TBlock>(TBlock block)
+            where TBlock : GameDataBlockBase<TBlock>
+        {
+            return new BasicBlockInfo(typeof(TBlock).Name, block.name, block.persistentID, block.internalEnabled);
+        }
+    }
+
     public class GTFODataBlockInfo<TBlock> : GTFODataBlockLoadable
         where TBlock : GameDataBlockBase<TBlock>
     {
@@ -309,6 +333,8 @@ namespace GTFO.DevTools
         public override string BlockName => typeof(TBlock).Name;
 
         public TBlock[] GetBlocks() => this.m_blocksByID.Values.OrderBy((b) => b.persistentID).ToArray();
+        public override BasicBlockInfo[] GetBasicBlocks()
+            => this.GetBlocks().Select((block) => BasicBlockInfo.From<TBlock>(block)).ToArray();
 
         public GameDataBlockWrapper<TBlock> Data => this.Loaded ? this.m_wrapper : null;
         public TBlock GetBlockByID(uint id) => this.m_blocksByID.TryGetValue(id, out TBlock block) ? block : default;

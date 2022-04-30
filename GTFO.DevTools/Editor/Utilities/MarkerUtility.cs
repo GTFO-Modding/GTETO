@@ -50,7 +50,7 @@ namespace GTFO.DevTools.Utilities
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(actualPath);
             if (prefab != null)
             {
-                var copy = GameObject.Instantiate(prefab, marker.transform);
+                var copy = PreviewUtility.Instantiate(prefab, marker.transform);
                 copy.transform.localPosition = Vector3.zero;
                 copy.transform.localRotation = Quaternion.identity;
                 PrefabSpawnerUtility.BuildPrefabSpawners(copy);
@@ -82,9 +82,10 @@ namespace GTFO.DevTools.Utilities
             if (prefab == null)
                 return;
 
-            var copy = GameObject.Instantiate(prefab, producer.transform);
+            var copy = PreviewUtility.Instantiate(prefab, producer.transform);
             copy.transform.localPosition = Vector3.zero;
             copy.transform.localRotation = Quaternion.identity;
+            copy.tag = "EditorOnly";
             PrefabSpawnerUtility.BuildPrefabSpawners(copy, new ProgressBarSettings(false, "Build Marker", true));
 
             for (int childIndex = 0, childCount = copy.transform.childCount; childIndex < childCount; childIndex++)
