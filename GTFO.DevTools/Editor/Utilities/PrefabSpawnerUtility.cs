@@ -21,7 +21,6 @@ namespace GTFO.DevTools.Utilities
             Vector3 rotation = root.localEulerAngles - correspondingRoot.localEulerAngles;
 
             GameObject prefabSpawnerObj = new GameObject("LG_PrefabSpawner_" + obj.name);
-            PreviewUtility.MarkAsEditorOnly(prefabSpawnerObj);
             prefabSpawnerObj.transform.SetParent(root.parent);
             prefabSpawnerObj.transform.localPosition = position;
             prefabSpawnerObj.transform.localScale = scale;
