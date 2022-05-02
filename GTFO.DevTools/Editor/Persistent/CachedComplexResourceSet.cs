@@ -148,6 +148,14 @@ namespace GTFO.DevTools.Persistent
             this.StraightPlugsNoGates.Clear();
             this.StraightPlugsWithGates.Clear();
 
+            this.Rebase();
+        }
+
+        public void Rebase()
+        {
+            if (GTFOGameConfig.Rundown.DataBlocks?.ComplexResourceSet == null)
+                return;
+
             foreach (var complexResourceSet in GTFOGameConfig.Rundown.DataBlocks.ComplexResourceSet.GetBlocks())
             {
                 this.CacheComplexResourceSet(complexResourceSet);

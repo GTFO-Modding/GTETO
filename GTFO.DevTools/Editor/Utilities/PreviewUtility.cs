@@ -4,6 +4,20 @@ namespace GTFO.DevTools.Utilities
 {
     public static class PreviewUtility
     {
+        public static void CreatePreview(GameObject obj)
+        {
+            MarkerUtility.SpawnRandomMarkers(obj);
+            PrefabSpawnerUtility.BuildPrefabSpawners(obj);
+            LadderUtility.Preview(obj);
+        }
+
+        public static void ClearPreview(GameObject obj)
+        {
+            MarkerUtility.CleanupMarkers(obj);
+            PrefabSpawnerUtility.CleanupPrefabSpawners(obj);
+            LadderUtility.ClearPreview(obj);
+        }
+
         public static void MarkAsEditorOnly<T>(T obj)
             where T : UnityEngine.Object
         {

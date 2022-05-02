@@ -58,8 +58,7 @@ namespace GTFO.DevTools.Extensions
             var obj = cmd.context as GameObject;
             if (!obj) return;
 
-            MarkerUtility.SpawnRandomMarkers(obj);
-            PrefabSpawnerUtility.BuildPrefabSpawners(obj);
+            PreviewUtility.CreatePreview(obj);
         }
 
         [MenuItem("GameObject/GTFO/Preview/Clear Preview", false, 0)]
@@ -68,8 +67,7 @@ namespace GTFO.DevTools.Extensions
             var obj = cmd.context as GameObject;
             if (!obj) return;
 
-            MarkerUtility.CleanupMarkers(obj);
-            PrefabSpawnerUtility.CleanupPrefabSpawners(obj);
+            PreviewUtility.ClearPreview(obj);
         }
     }
 }

@@ -42,16 +42,7 @@ namespace GTFO.DevTools.Ladder
                 var ladder = target as LG_Ladder;
                 if (ladder == null)
                     continue;
-                this.ClearPreview(ladder);
-            }
-        }
-
-        private void ClearPreview(LG_Ladder ladder)
-        {
-            var ladderPreviewTrans = ladder.transform.Find("Preview");
-            if (ladderPreviewTrans)
-            {
-                DestroyImmediate(ladderPreviewTrans.gameObject);
+                LadderUtility.ClearPreview(ladder);
             }
         }
 
@@ -74,123 +65,9 @@ namespace GTFO.DevTools.Ladder
                 if (ladder == null)
                     continue;
 
-                this.ClearPreview(ladder);
-                this.BuildLadder(ladder, subcomplex);
+                LadderUtility.ClearPreview(ladder);
+                LadderUtility.BuildLadder(ladder, subcomplex);
             }
-        }
-
-        // dont ask why its 0.6f and 0.16f. This is what the mono ref stats and it isn't assigned.
-        private float m_offsetAboveTopFloor = 0.6f;
-        private float m_topPieceThickness = 0.16f;
-
-        private void BuildLadder(LG_Ladder ladder, SubComplex subcomplex)
-        {
-            var baseCenterPos = ladder.transform.position;
-            var ladderTop = baseCenterPos + (ladder.m_topFloor.transform.localPosition.y + this.m_offsetAboveTopFloor) * ladder.transform.up;
-            var ladderVec = ladderTop - baseCenterPos;
-            var height = ladderVec.magnitude;
-            if (!ladder.m_enemyClimbingOnly)
-            {
-                this.SpawnLadderGraphics(ladder, subcomplex, height);
-            }
-        }
-
-        private void SpawnLadderGraphics(LG_Ladder ladder, SubComplex subcomplex, float height)
-        {
-            float curHeight = height;
-            this.SpawnLadderPiece(this.GetLadderPiece(subcomplex, LadderType.Bottom), curHeight, height, ladder);
-            curHeight -= 0.4f;
-            while (curHeight > 1f)
-            {
-                if (curHeight > 4f)
-                {
-                    this.SpawnLadderPiece(this.GetLadderPiece(subcomplex, LadderType.Length_4m), curHeight, height, ladder);
-                    curHeight -= 4f;
-                }
-                else if (curHeight > 2f)
-                {
-                    this.SpawnLadderPiece(this.GetLadderPiece(subcomplex, LadderType.Length_2m), curHeight, height, ladder);
-                    curHeight -= 2f;
-                }
-                else if (curHeight > 1f)
-                {
-                    this.SpawnLadderPiece(this.GetLadderPiece(subcomplex, LadderType.Length_1m), curHeight, height, ladder);
-                    curHeight -= 1f;
-                }
-                else
-                {
-                    this.SpawnLadderPiece(this.GetLadderPiece(subcomplex, LadderType.Length_05m), curHeight, height, ladder);
-                    curHeight -= 0.5f;
-                }
-            }
-            if (height > 3f)
-            {
-                GameObject gameObject = this.SpawnLadderPiece(this.GetLadderPiece(subcomplex, LadderType.Top), curHeight, height, ladder);
-                Vector3 position = gameObject.transform.position;
-                gameObject.transform.position = new Vector3(position.x, ladder.m_topFloor.position.y + this.m_topPieceThickness, position.z);
-            }
-            curHeight -= 0.4f;
-        }
-
-        private enum LadderType
-        {
-            Top,
-            Bottom,
-            Length_4m,
-            Length_2m,
-            Length_1m,
-            Length_05m
-        }
-
-        private GameObject SpawnLadderPiece(GameObject obj, float height, float ladderHeight, LG_Ladder ladder)
-        {
-            var previewTrans = ladder.transform.Find("Preview");
-            if (!previewTrans)
-            {
-                var previewObj = new GameObject("Preview");
-                previewObj.transform.SetParent(ladder.transform);
-                previewObj.transform.localScale = Vector3.one;
-                previewObj.transform.localPosition = Vector3.zero;
-                previewObj.transform.localRotation = Quaternion.identity;
-                previewTrans = previewObj.transform;
-            }
-            GameObject piece = PreviewUtility.Instantiate(obj, ladder.transform.position + Vector3.up * (ladderHeight - height), ladder.transform.rotation, previewTrans);
-            return piece;
-        }
-
-        private GameObject GetLadderPiece(SubComplex subcomplex, LadderType type)
-        {
-            var random = new System.Random();
-            var complexResourceSet = CachedComplexResourceSet.Instance;
-            string[] prefabs = Array.Empty<string>();
-
-            switch (type)
-            {
-                case LadderType.Top:
-                    prefabs = complexResourceSet.Ladders_Top.GetPrefabs(subcomplex);
-                    break;
-                case LadderType.Bottom:
-                    prefabs = complexResourceSet.Ladders_Bottom.GetPrefabs(subcomplex);
-                    break;
-                case LadderType.Length_4m:
-                    prefabs = complexResourceSet.Ladders_4m.GetPrefabs(subcomplex);
-                    break;
-                case LadderType.Length_2m:
-                    prefabs = complexResourceSet.Ladders_2m.GetPrefabs(subcomplex);
-                    break;
-                case LadderType.Length_1m:
-                    prefabs = complexResourceSet.Ladders_1m.GetPrefabs(subcomplex);
-                    break;
-                case LadderType.Length_05m:
-                    prefabs = complexResourceSet.Ladders_05m.GetPrefabs(subcomplex);
-                    break;
-            }
-
-            if (prefabs.Length == 0)
-                return null;
-            string prefabPath = prefabs.Length == 1 ? prefabs[0] : prefabs[random.Next(prefabs.Length)];
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PrefabInstance/" + Path.GetFileName(prefabPath));
-            return prefab;
         }
     }
 }

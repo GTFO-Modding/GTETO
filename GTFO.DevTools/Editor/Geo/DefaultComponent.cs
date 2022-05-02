@@ -108,13 +108,11 @@ namespace GTFO.DevTools.Geo
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button(Styles.PREVIEW_BUTTON_LABEL))
             {
-                MarkerUtility.SpawnRandomMarkers(selectedGeomorph.gameObject);
-                PrefabSpawnerUtility.BuildPrefabSpawners(selectedGeomorph.gameObject);
+                PreviewUtility.CreatePreview(selectedGeomorph.gameObject);
             }
             if (GUILayout.Button(Styles.CLEAR_PREVIEW_BUTTON_LABEL))
             {
-                MarkerUtility.CleanupMarkers(selectedGeomorph.gameObject);
-                PrefabSpawnerUtility.CleanupPrefabSpawners(selectedGeomorph.gameObject);
+                PreviewUtility.ClearPreview(selectedGeomorph.gameObject);
             }
             EditorGUILayout.EndHorizontal();
         }

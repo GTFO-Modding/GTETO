@@ -49,11 +49,11 @@ namespace GTFO.DevTools.Windows
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button(Styles.OPEN_RUNDOWN_BUTTON_LABEL) && this.ChangeRundown())
                 {
-                    GTFOGameConfig.Rundown.LoadBlocks();
+                    this.LoadRundown();
                 }
                 if (GUILayout.Button(Styles.REFRESH_RUNDOWN_BUTTON_LABEL) && this.RefreshRundown())
                 {
-                    GTFOGameConfig.Rundown.LoadBlocks();
+                    this.LoadRundown();
                 }
                 EditorGUILayout.EndHorizontal();
                 return;
@@ -63,12 +63,17 @@ namespace GTFO.DevTools.Windows
             {
                 if (this.ChangeRundown())
                 {
-                    GTFOGameConfig.Rundown.LoadBlocks();
+                    this.LoadRundown();
                 }
                 else
                 {
+                    Debug.LogError("Failed to change rundown, as there were errors validating it.");
                     return;
                 }
+            }
+            if (GUILayout.Button(Styles.REFRESH_RUNDOWN_BUTTON_LABEL) && this.RefreshRundown())
+            {
+                this.LoadRundown();
             }
 
             GUI.enabled = false;
@@ -96,6 +101,13 @@ namespace GTFO.DevTools.Windows
 
             DevToolSettings.Instance.m_rundownPath = path;
             return this.RefreshRundown();
+        }
+
+        private void LoadRundown()
+        {
+            GTFOGameConfig.Rundown.LoadBlocks();
+            // refresh cache
+            CachedComplexResourceSet.Instance.Rebase();                                       
         }
 
         private bool RefreshRundown()
