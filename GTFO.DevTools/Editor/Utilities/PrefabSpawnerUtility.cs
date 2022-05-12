@@ -22,7 +22,22 @@ namespace GTFO.DevTools.Utilities
                 indexOverride = root.GetSiblingIndex();
             }
 
-            var correspondingRoot = PrefabUtility.GetCorrespondingObjectFromSource(root);
+            var overrides = PrefabUtility.GetObjectOverrides(root.gameObject);
+            overrides.RemoveAll((o) => o.instanceObject is Transform transform && transform == root);
+            Transform correspondingRoot = PrefabUtility.GetCorrespondingObjectFromSource(root);
+            if (overrides.Count > 0)
+            {
+                bool createOverride = EditorUtility.DisplayDialog("Prefab Changed", "Changes have been made to the prefab. Do you want to create a prefab override?", "Yes", "No, wipe changes");
+                if (createOverride)
+                {
+                    string path = EditorUtility.SaveFilePanel("Create Prefab Variant", Application.dataPath, root.gameObject.name, "prefab");
+                    if (path != null)
+                    {
+                        correspondingRoot = PrefabUtility.SaveAsPrefabAsset(root.gameObject, path).transform;
+                    }
+                }
+            }
+
             Vector3 position = root.localPosition;
             Vector3 scale = new Vector3(root.localScale.x / correspondingRoot.localScale.x, root.localScale.y / correspondingRoot.localScale.y, root.localScale.z / correspondingRoot.localScale.z);
             Vector3 rotation = root.localEulerAngles - correspondingRoot.localEulerAngles;
