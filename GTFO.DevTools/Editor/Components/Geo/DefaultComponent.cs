@@ -4,11 +4,14 @@ using LevelGeneration;
 using UnityEditor;
 using UnityEngine;
 
-namespace GTFO.DevTools.Geo
+namespace GTFO.DevTools.Components.Geo
 {
-    public class DefaultComponent : GeoEditorComponent
+    public class DefaultComponent : GeoToolViewComponent
     {
-        public override bool NeedStyleRefresh => !Styles.HAS_GUI_CONSTANTS;
+        public DefaultComponent(GeoToolComponent parent) : base(parent, GeoToolComponent.View.Default)
+        { }
+
+         public override bool NeedStyleRefresh => !Styles.HAS_GUI_CONSTANTS;
         public override void RefreshStyle()
         {
             Styles.RefreshGUIConstants();
@@ -21,7 +24,7 @@ namespace GTFO.DevTools.Geo
             EditorGUILayout.LabelField(selectedGameObj == null ? "<No Object Selected>" : selectedGameObj.name, EditorStyles.whiteLargeLabel);
             if (GUILayout.Button(Styles.HEADER_SETTINGS_BUTTON_LABEL, GUILayout.ExpandWidth(false)))
             {
-                this.Window.ChangeToView(GeoToolView.Settings);
+                this.Tool.ChangeToView(GeoToolComponent.View.Settings);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
@@ -61,8 +64,8 @@ namespace GTFO.DevTools.Geo
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button(Styles.SETUP_AS_GEOMORPH_BUTTON_LABEL))
                 {
-                    this.Window.ChangeToView(GeoToolView.CreateGeomorph);
-                    ((CreateNewGeomorphComponent)this.Window.CurrentView).SetGeomorphGameObject(this.Window.SelectedGameObject);
+                    this.Tool.ChangeToView(GeoToolComponent.View.CreateGeomorph);
+                    ((CreateNewGeomorphComponent)this.Tool.GetCurrentView()).SetGeomorphGameObject(this.Window.SelectedGameObject);
                 }
                 this.CreateGeomorphButtonGUI();
                 EditorGUILayout.EndHorizontal();
@@ -146,7 +149,7 @@ namespace GTFO.DevTools.Geo
         {
             if (GUILayout.Button(Styles.CREATE_GEOMORPH_BUTTON_LABEL))
             {
-                this.Window.ChangeToView(GeoToolView.CreateGeomorph);
+                this.Tool.ChangeToView(GeoToolComponent.View.CreateGeomorph);
             }
         }
 

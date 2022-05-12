@@ -2,10 +2,13 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace GTFO.DevTools.Geo
+namespace GTFO.DevTools.Components.Geo
 {
-    public class SettingsComponent : GeoEditorComponent
+    public class SettingsComponent : GeoToolViewComponent
     {
+        public SettingsComponent(GeoToolComponent parent) : base(parent, GeoToolComponent.View.Settings)
+        { }
+
         public override bool NeedStyleRefresh => !Styles.HAS_GUI_CONSTANTS;
         public override void RefreshStyle()
         {
@@ -23,7 +26,7 @@ namespace GTFO.DevTools.Geo
             if (GUILayout.Button(Styles.HEADER_BACK_BUTTON_LABEL, GUILayout.ExpandWidth(false)))
             {
                 this.Reset();
-                this.Window.ChangeToView(GeoToolView.Default);
+                this.Tool.ChangeToView(GeoToolComponent.View.Default);
             }
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();

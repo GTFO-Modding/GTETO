@@ -149,121 +149,22 @@ namespace GTFO.DevTools.Gates
             }
         }
 
-        private void PreviewGate(string prefab)
-        {
-            var thePrefabUwU = AssetDatabase.LoadAssetAtPath<GameObject>(prefab);
-            if (!thePrefabUwU)
-            {
-                Debug.LogWarning("Failed to load prefab at path " + prefab);
-                return;
-            }
-
-            this.ClearPreview();
-
-            foreach (var target in this.targets)
-            {
-                var gate = (LG_InternalGate)target;
-
-                var obj = PreviewUtility.Instantiate(thePrefabUwU, gate.transform);
-                obj.transform.localPosition = Vector3.zero;
-                obj.transform.localRotation = Quaternion.identity;
-                obj.transform.localScale = Vector3.one;
-
-                PrefabSpawnerUtility.BuildPrefabSpawners(obj);
-                MarkerUtility.SpawnRandomMarkers(obj);
-            }
-        }
-
         private void CachePrefabs()
         {
-            var cache = CachedComplexResourceSet.Instance;
-            IEnumerable<string> prefabs = new string[0];
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.ApexGate)
-            {
-                prefabs = this.ConcatCache(cache.SmallApexGates, cache.MediumApexGates, cache.LargeApexGates, prefabs);
-            }
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.SecurityGate)
-            {
-                prefabs = this.ConcatCache(cache.SmallSecurityGates, cache.MediumSecurityGates, cache.LargeSecurityGates, prefabs);
-            }
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.BulkheadGate)
-            {
-                prefabs = this.ConcatCache(cache.SmallBulkheadGates, cache.MediumBulkheadGates, cache.LargeBulkheadGates, prefabs);
-            }
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.MainPathBulkheadGate)
-            {
-                prefabs = this.ConcatCache(cache.SmallMainPathBulkheadGates, cache.MediumMainPathBulkheadGates, cache.LargeMainPathBulkheadGates, prefabs);
-            }
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.WeakGate)
-            {
-                prefabs = this.ConcatCache(cache.SmallWeakGates, cache.MediumWeakGates, cache.LargeWeakGates, prefabs);
-            }
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.WallCap)
-            {
-                prefabs = this.ConcatCache(cache.SmallWallCaps, cache.MediumWallCaps, cache.LargeWallCaps, prefabs);
-            }
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.DestroyedCap)
-            {
-                prefabs = this.ConcatCache(cache.SmallDestroyedCaps, cache.MediumDestroyedCaps, cache.LargeDestroyedCaps, prefabs);
-            }
-            if (this.m_gateType == GateType.Any || this.m_gateType == GateType.WallAndDestroyedCap)
-            {
-                prefabs = this.ConcatCache(cache.SmallWallAndDestroyedCaps, cache.MediumWallAndDestroyedCaps, cache.LargeWallAndDestroyedCaps, prefabs);
-            }
-            var set = new HashSet<string>(prefabs);
-            this.m_prefabs = set.ToArray();
+            var gates = this.targets.Select((target) => (LG_InternalGate)target).ToArray();
+            this.m_prefabs = GateUtility.GetGatePrefabs(this.m_gateType, gates);
         }
-        private IEnumerable<string> ConcatCache(CachedComplexResourceSet.CachedResourceData small, CachedComplexResourceSet.CachedResourceData medium, CachedComplexResourceSet.CachedResourceData large, IEnumerable<string> currentPrefabs)
+
+        private void PreviewGate(string prefab)
         {
-            var gateTypes = new List<LG_GateType>();
             foreach (var target in this.targets)
-            {
-                var gate = (LG_InternalGate)target;
-                if (!gateTypes.Contains(gate.m_type))
-                {
-                    switch (gate.m_type)
-                    {
-                        case LG_GateType.Small:
-                            currentPrefabs = this.ConcatCache(small, currentPrefabs);
-                            break;
-                        case LG_GateType.Medium:
-                            currentPrefabs = this.ConcatCache(medium, currentPrefabs);
-                            break;
-                        case LG_GateType.Large:
-                            currentPrefabs = this.ConcatCache(large, currentPrefabs);
-                            break;
-                    }
-                    gateTypes.Add(gate.m_type);
-                }
-            }
-            return currentPrefabs;
-        }
-        private IEnumerable<string> ConcatCache(CachedComplexResourceSet.CachedResourceData cache, IEnumerable<string> currentPrefabs)
-        {
-            var subcomplexes = new List<SubComplex>();
-            foreach (var target in this.targets)
-            {
-                var gate = (LG_InternalGate)target;
-                if (!subcomplexes.Contains(gate.m_subComplex))
-                {
-                    currentPrefabs = currentPrefabs.Concat(cache.GetPrefabs(gate.m_subComplex));
-                    subcomplexes.Add(gate.m_subComplex);
-                }
-            }
-            return currentPrefabs;
+                GateUtility.PreviewGate((LG_InternalGate)target, prefab);
         }
 
         private void ClearPreview()
         {
             foreach (var target in this.targets)
-                this.ClearPreview((LG_InternalGate)target);
-        }
-        private void ClearPreview(LG_InternalGate plug)
-        {
-            if (plug.transform.childCount > 0)
-            {
-                DestroyImmediate(plug.transform.GetChild(0).gameObject);
-            }
+                GateUtility.ClearPreview((LG_InternalGate)target);
         }
 
         [DrawGizmo(GizmoType.NotInSelectionHierarchy |
@@ -352,18 +253,6 @@ namespace GTFO.DevTools.Gates
             //}
         }
 
-        private enum GateType
-        {
-            Any,
-            WeakGate,
-            SecurityGate,
-            ApexGate,
-            BulkheadGate,
-            MainPathBulkheadGate,
-            WallCap,
-            DestroyedCap,
-            WallAndDestroyedCap
-        }
 
         private enum GateView
         {

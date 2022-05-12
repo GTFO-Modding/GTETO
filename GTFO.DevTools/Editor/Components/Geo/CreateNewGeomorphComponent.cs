@@ -1,13 +1,13 @@
 ﻿using AIGraph;
-using Expedition;
+using GTFO.DevTools.Geo;
 using GTFO.DevTools.Persistent;
 using LevelGeneration;
 using UnityEditor;
 using UnityEngine;
 
-namespace GTFO.DevTools.Geo
+namespace GTFO.DevTools.Components.Geo
 {
-    public class CreateNewGeomorphComponent : GeoEditorComponent
+    public class CreateNewGeomorphComponent : GeoToolViewComponent
     {
         private GameObject m_gameObject;
         private string m_name;
@@ -16,6 +16,9 @@ namespace GTFO.DevTools.Geo
         private GeomorphType m_type;
         private GeomorphSubComplex m_subcomplex;
         private bool m_isExit;
+
+        public CreateNewGeomorphComponent(GeoToolComponent parent) : base(parent, GeoToolComponent.View.CreateGeomorph)
+        { }
 
         public override bool NeedStyleRefresh => !Styles.HAS_GUI_CONSTANTS;
         public override void RefreshStyle()
@@ -72,13 +75,13 @@ namespace GTFO.DevTools.Geo
                 Selection.activeGameObject = geo.gameObject;
 
                 this.Reset();
-                this.Window.ChangeToView(GeoToolView.Default);
+                this.Tool.ChangeToView(GeoToolComponent.View.Default);
             }
             GUI.enabled = true;
             if (GUILayout.Button("Cancel"))
             {
                 this.Reset();
-                this.Window.ChangeToView(GeoToolView.Default);
+                this.Tool.ChangeToView(GeoToolComponent.View.Default);
             }
             EditorGUILayout.EndHorizontal();
         }

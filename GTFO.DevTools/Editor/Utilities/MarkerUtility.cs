@@ -1,18 +1,21 @@
 ﻿using GameData;
 using GTFO.DevTools.Extensions;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
 namespace GTFO.DevTools.Utilities
 {
+    [InitializeOnLoad]
     public static class MarkerUtility
     {
+        static MarkerUtility()
+        {
+            PreviewUtility.DoPreview += SpawnRandomMarkers;
+            PreviewUtility.DoClearPreview += CleanupMarkers;
+        }
+
         public static void SpawnRandomMarkers(GameObject obj)
             => SpawnRandomMarkers(obj, new System.Random());
 

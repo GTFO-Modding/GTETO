@@ -1,21 +1,21 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace GTFO.DevTools.Utilities
 {
     public static class PreviewUtility
     {
+        public static event Action<GameObject> DoPreview;
+        public static event Action<GameObject> DoClearPreview;
+
         public static void CreatePreview(GameObject obj)
         {
-            MarkerUtility.SpawnRandomMarkers(obj);
-            PrefabSpawnerUtility.BuildPrefabSpawners(obj);
-            LadderUtility.Preview(obj);
+            DoPreview?.Invoke(obj);
         }
 
         public static void ClearPreview(GameObject obj)
         {
-            MarkerUtility.CleanupMarkers(obj);
-            PrefabSpawnerUtility.CleanupPrefabSpawners(obj);
-            LadderUtility.ClearPreview(obj);
+            DoClearPreview?.Invoke(obj);
         }
 
         public static void MarkAsEditorOnly<T>(T obj)

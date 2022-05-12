@@ -4,8 +4,15 @@ using UnityEngine;
 
 namespace GTFO.DevTools.Utilities
 {
+    [InitializeOnLoad]
     public static class PrefabSpawnerUtility
     {
+        static PrefabSpawnerUtility()
+        {
+            PreviewUtility.DoPreview += BuildPrefabSpawners;
+            PreviewUtility.DoClearPreview += CleanupPrefabSpawners;
+        }
+
         public static void ConvertToPrefabSpawner(GameObject obj)
         {
             var root = PrefabUtility.GetOutermostPrefabInstanceRoot(obj).transform;
@@ -38,7 +45,10 @@ namespace GTFO.DevTools.Utilities
             GameObject.DestroyImmediate(obj);
         }
 
-        public static void CleanupPrefabSpawners(GameObject obj, ProgressBarSettings progressBarSettings = default)
+        public static void CleanupPrefabSpawners(GameObject obj)
+            => CleanupPrefabSpawners(obj, default);
+
+        public static void CleanupPrefabSpawners(GameObject obj, ProgressBarSettings progressBarSettings)
         {
             bool dirtySpawners;
             do
@@ -65,7 +75,10 @@ namespace GTFO.DevTools.Utilities
             progressBarSettings.Clear();
         }
 
-        public static void BuildPrefabSpawners(GameObject obj, ProgressBarSettings progressBarSettings = default)
+        public static void BuildPrefabSpawners(GameObject obj)
+            => BuildPrefabSpawners(obj, default);
+
+        public static void BuildPrefabSpawners(GameObject obj, ProgressBarSettings progressBarSettings)
         {
             if (PrefabUtility.IsPartOfAnyPrefab(obj))
             {

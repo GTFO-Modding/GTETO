@@ -7,13 +7,19 @@ using UnityEngine;
 
 namespace GTFO.DevTools.Utilities
 {
+    [InitializeOnLoad]
     public static class LadderUtility
     {
+        static LadderUtility()
+        {
+            PreviewUtility.DoPreview += Preview;
+            PreviewUtility.DoClearPreview += ClearPreview;
+        }
         
 
         // dont ask why its 0.6f and 0.16f. This is what the mono ref stats and it isn't assigned.
-        private static float m_offsetAboveTopFloor = 0.6f;
-        private static float m_topPieceThickness = 0.16f;
+        public static readonly float m_offsetAboveTopFloor = 0.6f;
+        public static readonly float m_topPieceThickness = 0.16f;
 
         public static void Preview(GameObject obj, SubComplex complex)
         {
@@ -49,12 +55,18 @@ namespace GTFO.DevTools.Utilities
             }
         }
 
+        public static float CalculateLadderHeight(LG_Ladder ladder)
+        {
+            if (ladder == null) return 0f;
+            Vector3 baseCenterPos = ladder.transform.position;
+            Vector3 ladderTop = baseCenterPos + (ladder.m_topFloor.transform.localPosition.y + m_offsetAboveTopFloor) * ladder.transform.up;
+            Vector3 ladderVec = ladderTop - baseCenterPos;
+            return ladderVec.magnitude;
+        }
+
         public static void BuildLadder(LG_Ladder ladder, SubComplex subcomplex)
         {
-            var baseCenterPos = ladder.transform.position;
-            var ladderTop = baseCenterPos + (ladder.m_topFloor.transform.localPosition.y + m_offsetAboveTopFloor) * ladder.transform.up;
-            var ladderVec = ladderTop - baseCenterPos;
-            var height = ladderVec.magnitude;
+            float height = CalculateLadderHeight(ladder);
             if (!ladder.m_enemyClimbingOnly)
             {
                 SpawnLadderGraphics(ladder, subcomplex, height);

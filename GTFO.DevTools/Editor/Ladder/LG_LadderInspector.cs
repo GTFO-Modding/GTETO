@@ -12,9 +12,22 @@ namespace GTFO.DevTools.Ladder
     [CustomEditor(typeof(LG_Ladder))]
     public class LG_LadderInspector : Editor
     {
+        // random constant
+        private float m_colliderHeightAdd = 0.7f;
+
         public override void OnInspectorGUI()
         {
+            EditorGUI.BeginChangeCheck();
             base.OnInspectorGUI();
+            if (EditorGUI.EndChangeCheck())
+            {
+                foreach (var target in this.targets)
+                {
+                    this.UpdateLadderCollider(target as LG_Ladder);
+
+                }
+                this.serializedObject.ApplyModifiedProperties();
+            }
 
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
@@ -33,6 +46,34 @@ namespace GTFO.DevTools.Ladder
             this.ShowLabelWithPreviewButton("Floodways", SubComplex.Floodways);
             EditorGUI.indentLevel--;
 
+        }
+
+        private void UpdateLadderCollider(LG_Ladder ladder)
+        {
+            if (ladder == null) return;
+
+
+            BoxCollider collider = ladder.m_collider;
+            if (collider == null)
+            {
+                ladder.m_collider = collider= ladder.GetComponent<BoxCollider>();
+            }
+
+            float height = LadderUtility.CalculateLadderHeight(ladder);
+
+            collider.center = this.CalculateBoxCenter(height);
+            collider.size = this.CalculateBoxSize(ladder, height);
+            collider.enabled = !ladder.m_enemyClimbingOnly;
+        }
+
+        private Vector3 CalculateBoxCenter(float height)
+        {
+            return new Vector3(0f, (height + this.m_colliderHeightAdd) * 0.5f, 0f);
+        }
+
+        private Vector3 CalculateBoxSize(LG_Ladder ladder, float height)
+        {
+            return new Vector3(ladder.m_width + 1.2f, height + this.m_colliderHeightAdd, ladder.m_thickness);
         }
 
         private void ClearPreviews()

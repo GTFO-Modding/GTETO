@@ -1,7 +1,5 @@
-﻿using Expedition;
-using GTFO.DevTools.Persistent;
+﻿using GTFO.DevTools.Components.Geo;
 using LevelGeneration;
-using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,22 +8,12 @@ namespace GTFO.DevTools.Geo
 
     public class GeomorphToolWindow : EditorWindow
     {
-        private readonly GeoEditorComponent[] m_views = new GeoEditorComponent[]
-        {
-            new DefaultComponent(),
-            new SettingsComponent(),
-            new CreateNewGeomorphComponent()
-        };
-
         private GameObject m_selectedGameObj;
         private LG_Geomorph m_currentGeomorph;
         private LG_Area m_currentArea;
         private LG_Area[] m_currentGeomorphAreas = new LG_Area[0];
         private bool m_currentIsExitGeomorph;
-        private GeoToolView m_view = GeoToolView.Default;
-        public GeoToolView CurrentViewName => this.m_view;
-        public int CurrentViewIndex => (int)this.CurrentViewName;
-        public GeoEditorComponent CurrentView => this.m_views[this.CurrentViewIndex];
+        private GeoToolComponent m_component;
 
         public GameObject SelectedGameObject => this.m_selectedGameObj;
         public LG_Geomorph SelectedGeomorph => this.m_currentGeomorph;
@@ -33,21 +21,16 @@ namespace GTFO.DevTools.Geo
         public LG_Area SelectedArea => this.m_currentArea;
         public LG_Area[] SelectedGeomorphAreas => this.m_currentGeomorphAreas;
 
-        public void ChangeToView(GeoToolView view)
-        {
-            this.CurrentView?.OnHide();
-            this.m_view = view;
-            this.CurrentView?.Setup(this);
-            this.CurrentView?.OnShow();
-        }
-
         
         private void Awake()
         {
             if (!Styles.HAS_GUI_CONSTANTS)
                 Styles.RefreshGUIConstants();
 
-            this.CurrentView?.OnShow();
+            if (this.m_component == null)
+                this.m_component = new GeoToolComponent(this);
+
+            this.m_component.OnShow();
         }
 
         private void OnGUI()
@@ -55,10 +38,9 @@ namespace GTFO.DevTools.Geo
             this.RefreshSelectedGameObj();
             if (!Styles.HAS_GUI_CONSTANTS)
                 Styles.RefreshGUIConstants();
-            this.CurrentView?.Setup(this);
 
             this.titleContent = Styles.TITLE;
-            this.CurrentView?.OnGUI();
+            this.m_component.Draw();
         }
 
         private bool NeedsRepaint()
