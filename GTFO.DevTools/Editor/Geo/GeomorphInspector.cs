@@ -58,17 +58,31 @@ namespace GTFO.DevTools.Geo
             {
                 foreach (var plug in geomorph.GetComponentsInChildren<LG_Plug>())
                 {
-                    Gizmos.color = BASE_COLOR;
-                    Vector3 center = plug.transform.position - (plug.transform.forward * 4);
-                    Gizmos.DrawCube(center, plug.transform.rotation * new Vector3(16f, 16f, 8f));
-                    Gizmos.color = BASE_OUTLINE_COLOR;
-                    Gizmos.DrawWireCube(center, plug.transform.rotation * new Vector3(16f, 16f, 8f));
-                    Gizmos.color = FLOOR_COLOR;
-                    Gizmos.DrawCube(center, plug.transform.rotation * new Vector3(16f, 0.01f, 8f));
-                    Gizmos.color = WALL_COLOR;
-                    Gizmos.DrawCube(plug.transform.position, plug.transform.rotation * new Vector3(16f, 16f, 0.01f));
+                    Vector3 pos = plug.transform.position;
+                    Quaternion rotation = plug.transform.rotation;
+                    Vector3 forward = plug.transform.forward;
+
+                    DrawPlug(pos, rotation, forward);
+                    if (plug is LG_PlugCustom)
+                    {
+                        // draw back side
+                        DrawPlug(pos, Quaternion.EulerAngles(rotation.eulerAngles + new Vector3(0, 180, 0)), -forward);
+                    }
                 }
             }
+        }
+
+        private static void DrawPlug(Vector3 position, Quaternion rotation, Vector3 forward)
+        {
+            Gizmos.color = BASE_COLOR;
+            Vector3 center = position - (forward * 4);
+            Gizmos.DrawCube(center, rotation * new Vector3(16f, 16f, 8f));
+            Gizmos.color = BASE_OUTLINE_COLOR;
+            Gizmos.DrawWireCube(center, rotation * new Vector3(16f, 16f, 8f));
+            Gizmos.color = FLOOR_COLOR;
+            Gizmos.DrawCube(center, rotation * new Vector3(16f, 0.01f, 8f));
+            Gizmos.color = WALL_COLOR;
+            Gizmos.DrawCube(position, rotation * new Vector3(16f, 16f, 0.01f));
         }
     }
 }
