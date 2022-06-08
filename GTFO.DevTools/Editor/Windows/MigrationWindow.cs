@@ -104,14 +104,19 @@ namespace GTFO.DevTools.Windows
             }
             if (GUILayout.Button("Close"))
             {
-                this.m_view = View.None;
-                this.m_guidMap.Clear();
-                this.m_importPath = "";
-                this.m_project = null;
-                this.m_userAssets.Clear();
-                this.Close();
+                this.DoClose();
             }
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void DoClose()
+        {
+            this.m_view = View.None;
+            this.m_guidMap.Clear();
+            this.m_importPath = "";
+            this.m_project = null;
+            this.m_userAssets.Clear();
+            this.Close();
         }
 
         private void TransferGUI()
@@ -348,10 +353,16 @@ namespace GTFO.DevTools.Windows
                 GUIUtility.systemCopyBuffer = failEx;
             }
             EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Back", GUILayout.ExpandWidth(false)))
             {
                 this.m_view = View.None;
             }
+            if (GUILayout.Button("Close", GUILayout.ExpandWidth(false)))
+            {
+                this.DoClose();
+            }
+            EditorGUILayout.EndHorizontal();
         }
         private void ExportFinishedGUI()
         {
@@ -366,10 +377,16 @@ namespace GTFO.DevTools.Windows
                 GUIUtility.systemCopyBuffer = projInfoPath;
             }
             EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Back", GUILayout.ExpandWidth(false)))
             {
                 this.m_view = View.None;
             }
+            if (GUILayout.Button("Close", GUILayout.ExpandWidth(false)))
+            {
+                this.DoClose();
+            }
+            EditorGUILayout.EndHorizontal();
         }
         private void ExportGUI()
         {
