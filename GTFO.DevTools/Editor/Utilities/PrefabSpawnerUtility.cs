@@ -1,4 +1,5 @@
 ﻿using LevelGeneration;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ namespace GTFO.DevTools.Utilities
     [InitializeOnLoad]
     public static class PrefabSpawnerUtility
     {
+        private static FieldInfo m_disableCollisionField = typeof(LG_PrefabSpawner).GetField("m_disableCollisionField", BindingFlags.NonPublic | BindingFlags.Instance);
+
         static PrefabSpawnerUtility()
         {
             PreviewUtility.DoPreview += BuildPrefabSpawners;
@@ -112,7 +115,7 @@ namespace GTFO.DevTools.Utilities
                 var prefabSpawner = spawners[index];
                 progressBarSettings.Update("Build Prefab Spawners", $"Building {prefabSpawner.m_prefab.name}", index, spawnerCount);
                 GameObject prefab = PreviewUtility.Instantiate(prefabSpawner.m_prefab, prefabSpawner.transform.position, prefabSpawner.transform.rotation, prefabSpawner.transform.parent);
-                if (prefabSpawner.m_disableCollision)
+                if ((bool)m_disableCollisionField.GetValue(prefabSpawner))
                 {
                     Collider[] colliders = prefab.GetComponentsInChildren<Collider>();
                     foreach (Collider collider in colliders)
