@@ -7,7 +7,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Newtonsoft.Json;
-using Unity.VisualScripting;
 using System.Text;
 
 namespace GTFO.DevTools.Windows
@@ -23,7 +22,7 @@ namespace GTFO.DevTools.Windows
         private ProjectInformation m_project;
         private Dictionary<string, string> m_guidMap = new Dictionary<string, string>();
         private List<string> m_userAssets = new List<string>();
-        private List<Exception> m_transferExceptions = new List<Exception>();
+        private List<TransferExceptionInfo> m_transferExceptions = new List<TransferExceptionInfo>();
 
         private void OnGUI()
         {
@@ -66,29 +65,29 @@ namespace GTFO.DevTools.Windows
 
         private void TransferFinishedGUI()
         {
-            EditorGUILayout.LabelField("Transfer Complete", EditorStyles.largeLabel);
-            EditorGUILayout.LabelField("Assets should have been transferred over to this new project!", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(Styles.TRANSFER_COMPLETED_TITLE_LABEL, EditorStyles.largeLabel);
+            EditorGUILayout.LabelField(Styles.TRANSFER_COMPLETED_INFO_LABEL, EditorStyles.wordWrappedLabel);
             if (this.m_transferExceptions.Count > 0)
             {
-                EditorGUILayout.LabelField("There were a couple of errors, though. Be sure to paste some of these errors into the #unity-development channel.", EditorStyles.wordWrappedLabel);
+                EditorGUILayout.LabelField(Styles.TRANSFER_ERRORS_INFO_LABEL, EditorStyles.wordWrappedLabel);
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField($"Errors ({this.m_transferExceptions.Count})");
                 this.m_scrollPos = EditorGUILayout.BeginScrollView(this.m_scrollPos);
-                foreach (Exception error in this.m_transferExceptions)
+                foreach (TransferExceptionInfo error in this.m_transferExceptions)
                 {
                     EditorGUILayout.BeginHorizontal();
-                    EditorGUILayout.LabelField(new GUIContent(error.Message, error.ToString()), EditorStyles.wordWrappedLabel);
-                    if (GUILayout.Button("Copy", GUILayout.ExpandWidth(false)))
+                    EditorGUILayout.LabelField(error.label, EditorStyles.wordWrappedLabel);
+                    if (GUILayout.Button(Styles.COPY_SINGLE_EXCEPTION_BUTTON_LABEL, GUILayout.ExpandWidth(false)))
                     {
                         GUIUtility.systemCopyBuffer = error.ToString();
                     }
                     EditorGUILayout.EndHorizontal();
                 }
                 EditorGUILayout.EndScrollView();
-                if (GUILayout.Button("Copy All", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(Styles.COPY_ALL_EXCEPTIONS_BUTTON_LABEL, GUILayout.ExpandWidth(false)))
                 {
                     StringBuilder builder = new StringBuilder();
-                    foreach (Exception error in this.m_transferExceptions)
+                    foreach (TransferExceptionInfo error in this.m_transferExceptions)
                     {
                         builder.AppendLine(error.ToString());
                         builder.AppendLine();
@@ -108,16 +107,6 @@ namespace GTFO.DevTools.Windows
             }
             EditorGUILayout.EndHorizontal();
         }
-
-        private void DoClose()
-        {
-            this.m_view = View.None;
-            this.m_guidMap.Clear();
-            this.m_importPath = "";
-            this.m_project = null;
-            this.m_userAssets.Clear();
-            this.Close();
-        }
         private void TransferGUI()
         {
             if (this.m_project == null)
@@ -127,9 +116,9 @@ namespace GTFO.DevTools.Windows
             }
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("You are now closer to transferring over your assets to this project. View the files to transfer below. You can hover over them to view the full asset path.", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(Styles.TRANSFER_INFO_LABEL, EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Transferring Files:", EditorStyles.largeLabel);
+            EditorGUILayout.LabelField(Styles.TRANSFER_FILES_TITLE_LABEL, EditorStyles.largeLabel);
             this.m_scrollPos = EditorGUILayout.BeginScrollView(this.m_scrollPos);
 
             foreach (string item in this.m_project.GetUserAssets())
@@ -141,17 +130,17 @@ namespace GTFO.DevTools.Windows
 
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Cancel", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(Styles.CANCEL_BUTTON_LABEL, GUILayout.ExpandWidth(false)))
             {
                 this.m_view = View.Import;
             }
-            if (GUILayout.Button("Transfer", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(Styles.TRANSFER_BUTTON_LABEL, GUILayout.ExpandWidth(false)))
             {
                 this.m_transferExceptions.Clear();
                 for (int index = 0, userAssetCount = this.m_userAssets.Count; index < userAssetCount; index++)
                 {
                     string userAsset = this.m_userAssets[index];
-                    EditorUtility.DisplayProgressBar("Transfer", "Transferring asset '{userAsset}'\n[{index + 1}/{userAssetCount}]", (float)(index + 1) / userAssetCount);
+                    EditorUtility.DisplayProgressBar("Transfer", $"Transferring asset '{userAsset}'\n[{index + 1}/{userAssetCount}]", (float)(index + 1) / userAssetCount);
 
                     try
                     {
@@ -163,7 +152,7 @@ namespace GTFO.DevTools.Windows
                     catch (Exception ex)
                     {
                         Debug.LogError($"Failed transferring asset '<color=orange>{userAsset}</color>': {ex}");
-                        this.m_transferExceptions.Add(ex);
+                        this.m_transferExceptions.Add(new TransferExceptionInfo(userAsset, ex));
                     }
                 }
                 EditorUtility.ClearProgressBar();
@@ -176,7 +165,7 @@ namespace GTFO.DevTools.Windows
         private void ImportingGUI()
         {
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Importing...");
+            EditorGUILayout.LabelField(Styles.IMPORTING_LABEL);
 
             if (!File.Exists(this.m_importPath))
             {
@@ -254,7 +243,7 @@ namespace GTFO.DevTools.Windows
         }
         private void ImportFailedGUI()
         {
-            EditorGUILayout.LabelField("A fatal error has occurred which resulted in failure to import project.", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(Styles.IMPORT_FAILED_INFO_LABEL, EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField(this.m_importFailReason, EditorStyles.wordWrappedLabel);
 
@@ -266,12 +255,13 @@ namespace GTFO.DevTools.Windows
         }
         private void ImportFileGUI()
         {
+            EditorGUILayout.LabelField(Styles.IMPORT_FILE_PATH_LABEL);
             this.m_importPath = EditorGUILayout.TextField(this.m_importPath);
 
             EditorGUILayout.Space();
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("Import"))
+            if (GUILayout.Button(Styles.IMPORT_FILE_PATH_IMPORT_BUTTON_LABEL))
             {
                 this.m_view = View.Importing;
             }
@@ -284,17 +274,17 @@ namespace GTFO.DevTools.Windows
         private void ImportGUI()
         {
             EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Import", EditorStyles.largeLabel);
+            EditorGUILayout.LabelField(Styles.IMPORT_TITLE, EditorStyles.largeLabel);
             if (GUILayout.Button(Styles.BACK_BUTTON_LABEL, GUILayout.ExpandWidth(false)))
             {
                 this.m_view = View.None;
             }
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.LabelField("Imports prepared assets from another project.", EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(Styles.IMPORT_INFO_LABEL, EditorStyles.wordWrappedLabel);
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("A prepared project will have an 'information.projinfo' file outside of it's assets folder.", EditorStyles.wordWrappedLabel);
-            EditorGUILayout.LabelField("Click Import below to select this file", EditorStyles.wordWrappedLabel);
-            if (GUILayout.Button("Import"))
+            EditorGUILayout.LabelField(Styles.PROJECT_INFO_LOCATION_IMPORT_HINT_LABEL, EditorStyles.wordWrappedLabel);
+            EditorGUILayout.LabelField(Styles.IMPORT_FROM_FILE_INFO_LABEL, EditorStyles.wordWrappedLabel);
+            if (GUILayout.Button(Styles.IMPORT_FROM_FILE_BUTTON_LABEL))
             {
                 string basicPath = Path.GetDirectoryName(Path.GetDirectoryName(Application.dataPath));
                 string folder = EditorUtility.OpenFilePanel("Import Project", basicPath, "projinfo");
@@ -305,8 +295,8 @@ namespace GTFO.DevTools.Windows
                 }
             }
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("You can also Import Project from a 'projinfo' file path. This should be used if you clicked 'Copy Path' for the project you setup for export.", EditorStyles.wordWrappedLabel);
-            if (GUILayout.Button("Import from File Path"))
+            EditorGUILayout.LabelField(Styles.IMPORT_FROM_PATH_INFO_LABEL, EditorStyles.wordWrappedLabel);
+            if (GUILayout.Button(Styles.IMPORT_FROM_PATH_BUTTON_LABEL))
             {
                 this.m_view = View.ImportFile;
             }
@@ -435,6 +425,16 @@ namespace GTFO.DevTools.Windows
             ProjectInformation information = MigrationUtility.CreateProjectInformation(Application.dataPath, userFiles);
 
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(Application.dataPath), "information.projinfo"), JsonConvert.SerializeObject(information.ToRaw()));
+        }
+
+        private void DoClose()
+        {
+            this.m_view = View.None;
+            this.m_guidMap.Clear();
+            this.m_importPath = "";
+            this.m_project = null;
+            this.m_userAssets.Clear();
+            this.Close();
         }
 
         private sealed class FolderInfo
@@ -596,13 +596,15 @@ namespace GTFO.DevTools.Windows
 
         private sealed class TransferExceptionInfo
         {
-            public string assetPath;
-            public Exception exception;
+            public readonly string assetPath;
+            public readonly Exception exception;
+            public readonly GUIContent label;
 
             public TransferExceptionInfo(string assetPath, Exception ex)
             {
                 this.assetPath = assetPath;
                 this.exception = ex;
+                this.label = new GUIContent($"[{Path.GetFileName(assetPath)}] {ex.Message}", $"Asset Path:\n{this.assetPath}\nFull Exception:\n{ex}");
             }
 
             public override string ToString()
@@ -634,6 +636,13 @@ namespace GTFO.DevTools.Windows
         #region Styles
         private static class Styles
         {
+            public static GUIContent TRANSFER_COMPLETED_TITLE_LABEL;
+            public static GUIContent TRANSFER_COMPLETED_INFO_LABEL;
+            public static GUIContent TRANSFER_ERRORS_INFO_LABEL;
+            public static GUIContent TRANSFER_FILES_TITLE_LABEL;
+            public static GUIContent TRANSFER_INFO_LABEL;
+            public static GUIContent TRANSFER_BUTTON_LABEL;
+            public static GUIContent IMPORT_TITLE;
             public static GUIContent TITLE;
             public static GUIContent MIGRATE_TOOL_TITLE;
             public static GUIContent ERROR_ICON;
@@ -654,15 +663,48 @@ namespace GTFO.DevTools.Windows
             public static GUIContent PROJECT_EXPORT_SUCCESS_INFO;
             public static GUIContent PROJECT_EXPORT_FAILURE_INFO;
             public static GUIContent COPY_EXCEPTION_BUTTON_LABEL;
+            public static GUIContent COPY_SINGLE_EXCEPTION_BUTTON_LABEL;
+            public static GUIContent COPY_ALL_EXCEPTIONS_BUTTON_LABEL;
             public static GUIContent COPY_EXCEPTION_HINT_LABEL;
             public static GUIContent MIGRATE_TOOL_INFO;
             public static GUIContent EXPORT_PROJECT_HINT;
             public static GUIContent IMPORT_PROJECT_HINT;
             public static GUIContent IMPORT_PROJECT_BUTTON;
             public static GUIContent EXPORT_PROJECT_BUTTON;
+            public static GUIContent IMPORT_INFO_LABEL;
+            public static GUIContent PROJECT_INFO_LOCATION_IMPORT_HINT_LABEL;
+            public static GUIContent IMPORT_FROM_FILE_BUTTON_LABEL;
+            public static GUIContent IMPORT_FROM_FILE_INFO_LABEL;
+            public static GUIContent IMPORT_FROM_PATH_INFO_LABEL;
+            public static GUIContent IMPORT_FROM_PATH_BUTTON_LABEL;
+            public static GUIContent IMPORT_FILE_PATH_LABEL;
+            public static GUIContent IMPORT_FILE_PATH_IMPORT_BUTTON_LABEL;
+            public static GUIContent IMPORT_FAILED_INFO_LABEL;
+            public static GUIContent IMPORTING_LABEL;
+            public static GUIContent CANCEL_BUTTON_LABEL;
 
             static Styles()
             {
+                TRANSFER_COMPLETED_TITLE_LABEL = new GUIContent("Transfer Complete");
+                TRANSFER_COMPLETED_INFO_LABEL = new GUIContent("Assets should have been transferred over to this new project!");
+                TRANSFER_BUTTON_LABEL = new GUIContent("Transfer");
+                TRANSFER_ERRORS_INFO_LABEL = new GUIContent("There were a couple of errors, though. Be sure to paste some of these errors into the #unity-development channel.");
+                COPY_ALL_EXCEPTIONS_BUTTON_LABEL = new GUIContent("Copy All", "Copy all exception messages");
+                COPY_SINGLE_EXCEPTION_BUTTON_LABEL = new GUIContent("Copy", "Copy the full exception message");
+                CANCEL_BUTTON_LABEL = new GUIContent("Cancel");
+                TRANSFER_FILES_TITLE_LABEL = new GUIContent("Transferring Files:");
+                TRANSFER_INFO_LABEL = new GUIContent("You are now closer to transferring over your assets to this project. View the files to transfer below. You can hover over them to view the full asset path.");
+                IMPORTING_LABEL = new GUIContent("Importing...");
+                IMPORT_FAILED_INFO_LABEL = new GUIContent("A fatal error has occurred which resulted in failure to import project.");
+                IMPORT_TITLE = new GUIContent("Import");
+                IMPORT_INFO_LABEL = new GUIContent("Imports prepared assets from another project.");
+                PROJECT_INFO_LOCATION_IMPORT_HINT_LABEL = new GUIContent("A prepared project will have an 'information.projinfo' file outside of it's assets folder.");
+                IMPORT_FROM_FILE_BUTTON_LABEL = new GUIContent("Import");
+                IMPORT_FROM_FILE_INFO_LABEL = new GUIContent("Click Import below to select this file");
+                IMPORT_FROM_PATH_INFO_LABEL = new GUIContent("You can also Import Project from a 'projinfo' file path. This should be used if you clicked 'Copy Path' for the project you setup for export.");
+                IMPORT_FROM_PATH_BUTTON_LABEL = new GUIContent("Import from File Path");
+                IMPORT_FILE_PATH_LABEL = new GUIContent("File Path");
+                IMPORT_FILE_PATH_IMPORT_BUTTON_LABEL = new GUIContent("Import");
                 EXPORT_PROJECT_BUTTON = new GUIContent("Export");
                 IMPORT_PROJECT_BUTTON = new GUIContent("Import/Transfer Project");
                 IMPORT_PROJECT_HINT = new GUIContent("Import/Transfer will import a project into this project, transferring over your assets whilst updating them to match this project's structure. Choose this to transfer assets to this project.");
