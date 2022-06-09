@@ -11,7 +11,7 @@ namespace GTFO.DevTools.Components.Geo
         public DefaultComponent(GeoToolComponent parent) : base(parent, GeoToolComponent.View.Default)
         { }
 
-         public override bool NeedStyleRefresh => !Styles.HAS_GUI_CONSTANTS;
+        public override bool NeedStyleRefresh => !Styles.HAS_GUI_CONSTANTS;
         public override void RefreshStyle()
         {
             Styles.RefreshGUIConstants();
