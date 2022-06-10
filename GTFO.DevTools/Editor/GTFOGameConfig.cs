@@ -423,14 +423,4 @@ namespace GTFO.DevTools
             return false;
         }
     }
-
-    public static class FuckYouExtensions
-    {
-        public static string TranslateText(this LocalizedText localizedDumbass, GTFORundownDataBlocks datablocks)
-        {
-            if (!localizedDumbass.HasTranslation)
-                return localizedDumbass.UntranslatedText;
-            return datablocks.Text.GetBlockByID(localizedDumbass.Id)?.English ?? "";
-        }
-    }
 }
