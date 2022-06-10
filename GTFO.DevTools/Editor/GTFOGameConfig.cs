@@ -349,12 +349,12 @@ namespace GTFO.DevTools
 
         protected override void DoSaveAtPath(string path)
         {
-            this.WriteBlockContentsAtPath(path, JsonConvert.SerializeObject(this.Data, CellJSON.JSONSettings_GameData));
+            this.WriteBlockContentsAtPath(path, JsonConvert.SerializeObject(this.Data, JSONSettings_GameData));
         }
 
         protected override void DoLoadAtPath(string path)
         {
-            this.m_wrapper = JsonConvert.DeserializeObject<GameDataBlockWrapper<TBlock>>(this.GetBlockContentsAtPath(path), CellJSON.JSONSettings_GameData);
+            this.m_wrapper = JsonConvert.DeserializeObject<GameDataBlockWrapper<TBlock>>(this.GetBlockContentsAtPath(path), JSONSettings_GameData);
 
             this.VerifyLatestPersistentID();
 
@@ -422,5 +422,18 @@ namespace GTFO.DevTools
 
             return false;
         }
+
+        public static readonly JsonSerializerSettings JSONSettings_GameData = new JsonSerializerSettings()
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Include,
+            Formatting = Formatting.Indented,
+            Converters = new JsonConverter[]
+            {
+                new ColorConverter(),
+                new StringEnumConverter()
+            }
+        };
     }
 }
