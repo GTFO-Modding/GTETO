@@ -1,6 +1,9 @@
 ﻿using AIGraph;
+using Expedition;
 using GTFO.DevTools.Geo;
 using GTFO.DevTools.Persistent;
+using GTFO.DevTools.Plugs;
+using GTFO.DevTools.Utilities;
 using LevelGeneration;
 using UnityEditor;
 using UnityEngine;
@@ -116,27 +119,7 @@ namespace GTFO.DevTools.Components.Geo
                         geoName += "_elevator_shaft";
                         break;
                 }
-                switch (this.m_subcomplex)
-                {
-                    case GeomorphSubComplex.Lab:
-                        geoName += "_lab";
-                        break;
-                    case GeomorphSubComplex.DataCenter:
-                        geoName += "_datacenter";
-                        break;
-                    case GeomorphSubComplex.DigSite:
-                        geoName += "_digsite";
-                        break;
-                    case GeomorphSubComplex.Refinery:
-                        geoName += "_refinery";
-                        break;
-                    case GeomorphSubComplex.Storage:
-                        geoName += "_storage";
-                        break;
-                    case GeomorphSubComplex.Floodways:
-                        geoName += "_floodways";
-                        break;
-                }
+                geoName += this.m_subcomplex.ToString().ToLower();
 
                 string initials = DevToolSettings.Instance.m_authorInitials ?? "DEV";
                 if (!string.IsNullOrWhiteSpace(this.m_name))
@@ -155,6 +138,10 @@ namespace GTFO.DevTools.Components.Geo
             if (this.m_type.IsFloorTransition())
             {
                 var startTile = obj.AddComponent<LG_FloorTransition>();
+                if (this.m_type == GeomorphType.ElevatorShaft)
+                {
+                    startTile.m_transitionType = LG_FloorTransitionType.Elevator;
+                }
 
                 geo = startTile;
 
@@ -164,20 +151,61 @@ namespace GTFO.DevTools.Components.Geo
                 geo = obj.AddComponent<LG_Geomorph>();
             }
             geo.m_goShapeType = this.m_shape;
-            if (this.m_isExit)
-            {
-                var exit = obj.AddComponent<LG_LevelExitGeo>();
-            }
-            this.SetupGeomorph(obj);
+            SetupGeomorph(obj, this.m_type, this.m_subcomplex, this.m_isExit);
             return geo;
         }
 
-        private void SetupGeomorph(GameObject obj)
+        private static void SetupGeomorph(GameObject obj, GeomorphType type, GeomorphSubComplex subcomplex, bool isExit = false)
         {
             var geomorph = obj.GetComponent<LG_Geomorph>();
             if (!geomorph)
             {
                 return;
+            }
+
+            if (isExit)
+            {
+                var exit = obj.AddComponent<LG_LevelExitGeo>();
+            }
+
+            if (type == GeomorphType.ElevatorShaft)
+            {
+                GameObject areaA = new GameObject("Area A");
+                areaA.transform.SetParent(obj.transform);
+                LG_Area area = areaA.AddComponent<LG_Area>();
+
+                GameObject gateObj = new GameObject("Gate");
+                gateObj.transform.SetParent(area.transform);
+                gateObj.transform.localPosition = new Vector3(0, 0, 32);
+
+                gateObj.AddComponent<AIG_PlugSocket>();
+                var plugComp = gateObj.AddComponent<LG_PlugCustom>();
+                plugComp.m_linksFrom = area;
+                
+                gateObj.AddComponent<AIG_DoorInsert>();
+
+                PlugUtility.CreatePlug(gateObj.transform, "plug", PlugPassageType.Custom, subcomplex.ToSubComplex());
+
+                GameObject hideGroupObj = new GameObject("hidegroup");
+                hideGroupObj.transform.SetParent(area.transform);
+
+                GameObject aigGraphSourceObj = new GameObject("AreaAiGraphSource");
+                aigGraphSourceObj.transform.SetParent(area.transform);
+                aigGraphSourceObj.AddComponent<LG_AreaAIGraphSource>();
+
+                GameObject expeditionExitScanAlignObj = new GameObject("ExpeditionExitScanAlign");
+                expeditionExitScanAlignObj.transform.SetParent(area.transform);
+
+                GameObject elevatorCargoAlignObj = new GameObject("ElevatorCargoAlign");
+                elevatorCargoAlignObj.transform.SetParent(area.transform);
+
+                ElevatorShaftLanding landing = obj.AddComponent<ElevatorShaftLanding>();
+                landing.m_objectsToHideWhenDown = new GameObject[1]
+                {
+                    hideGroupObj
+                };
+                landing.m_cargoCageAlign = elevatorCargoAlignObj.transform;
+                landing.m_securityScanAlign = expeditionExitScanAlignObj.transform;
             }
         }
 
