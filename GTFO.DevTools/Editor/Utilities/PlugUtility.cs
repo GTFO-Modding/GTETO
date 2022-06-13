@@ -1,4 +1,5 @@
-﻿using Expedition;
+﻿using CullingSystem;
+using Expedition;
 using GTFO.DevTools.Persistent;
 using GTFO.DevTools.Plugs;
 using LevelGeneration;
@@ -121,6 +122,103 @@ namespace GTFO.DevTools.Utilities
                 }
             }
             return currentPrefabs;
+        }
+        public static GameObject CreatePlug(Transform parent, PlugHeight height, PlugElevation elevation, PlugPassageType passage, SubComplex subcomplex, int increment)
+        {
+            string name = "env_plug_";
+            switch (height)
+            {
+                case PlugHeight.height_8m:
+                    name += "8mheight_";
+                    break;
+            }
+
+
+            if (passage != PlugPassageType.Cap)
+            {
+                name += elevation.ToString().ToLower() + "_";
+            }
+
+
+            switch (passage)
+            {
+                case PlugPassageType.SmallGate:
+                case PlugPassageType.MediumGate:
+                case PlugPassageType.SmallGateAlign:
+                case PlugPassageType.MediumGateAlign:
+                    name += "with_gate_";
+                    break;
+                case PlugPassageType.Cap:
+                    name += "cap_";
+                    break;
+            }
+
+            name += subcomplex.ToString().ToLower() + "_";
+            name += increment.ToString().PadLeft(2, '0');
+
+            return CreatePlug(parent, name, passage, subcomplex);
+        }
+        public static GameObject CreatePlug(Transform parent, string name, PlugPassageType passage, SubComplex subcomplex)
+        {
+            GameObject plugObj = new GameObject(name);
+            plugObj.transform.SetParent(parent);
+
+            if (passage == PlugPassageType.Free)
+            {
+                LG_FreePassageGate gate = plugObj.AddComponent<LG_FreePassageGate>();
+                gate.m_subComplex = subcomplex;
+            }
+
+            GameObject crossingObj = null;
+            GameObject infrontObj = null;
+
+            GameObject behindObj = new GameObject("behind");
+            behindObj.transform.SetParent(plugObj.transform);
+
+            if (passage != PlugPassageType.Cap)
+            {
+                crossingObj = new GameObject("crossing");
+                crossingObj.transform.SetParent(plugObj.transform);
+
+                if (passage.IsGate())
+                {
+                    LG_InternalGate gate = null; 
+                    if (passage.IsGateAlign())
+                    {
+                        GameObject plugGateAlignObj = new GameObject("PlugDoorAlign");
+                        plugGateAlignObj.transform.SetParent(crossingObj.transform);
+                        gate = plugGateAlignObj.AddComponent<LG_PlugDoorAlign>();
+                    }
+
+                    gate.m_subComplex = subcomplex;
+                    if (passage.IsSmallGate())
+                    {
+                        gate.m_type = LG_GateType.Small;
+                    }
+                    if (passage.IsMediumGate())
+                    {
+                        gate.m_type = LG_GateType.Medium;
+                    }
+                }
+                else
+                {
+                    GameObject portalHelperObj = new GameObject("Portal Helper");
+                    portalHelperObj.transform.SetParent(crossingObj.transform);
+                    portalHelperObj.AddComponent<C_PortalHelper>();
+                }
+
+                
+
+                infrontObj = new GameObject("infront");
+                infrontObj.transform.SetParent(plugObj.transform);
+            }
+
+            LG_PortalDivider portalDivider = plugObj.AddComponent<LG_PortalDivider>();
+            portalDivider.m_behind = behindObj.transform;
+            portalDivider.m_crossing = crossingObj == null ? null : crossingObj.transform;
+            portalDivider.m_inFront = infrontObj == null ? null : infrontObj.transform;
+
+            return plugObj;
         }
     }
 }
