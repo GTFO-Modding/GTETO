@@ -1,7 +1,8 @@
 using Newtonsoft.Json;
 using Localization;
 using UnityEngine;
-using Harmony;
+using HarmonyLib;
+using System;
 
 namespace GTFO.DevTools.Converters
 {
@@ -13,13 +14,13 @@ namespace GTFO.DevTools.Converters
         public static bool WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             LocalizedText text = (LocalizedText)value;
-            if (string.IsNullOrEmpty(localizedText.UntranslatedText))
+            if (string.IsNullOrEmpty(text.UntranslatedText))
             {
-                writer.WriteValue(localizedText.Id);
+                writer.WriteValue(text.Id);
             }
             else
             {
-                writer.WriteValue(localizedText.UntranslatedText);
+                writer.WriteValue(text.UntranslatedText);
             }
             return false;
         }
@@ -53,7 +54,7 @@ namespace GTFO.DevTools.Converters
 
         [HarmonyPatch(typeof(LocalizedTextJsonConverter), nameof(LocalizedTextJsonConverter.CanConvert))]
         [HarmonyPrefix]
-        public static void CanConvert(Type objectType, ref bool __result)
+        public static bool CanConvert(Type objectType, ref bool __result)
         {
             __result = objectType == typeof(LocalizedText);
             return false;
