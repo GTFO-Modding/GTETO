@@ -1,4 +1,5 @@
 ﻿using Expedition;
+using GTFO.DevTools.Extensions;
 using GTFO.DevTools.Persistent;
 using GTFO.DevTools.Utilities;
 using System;
@@ -53,10 +54,10 @@ namespace GTFO.DevTools.Ladder
             if (ladder == null) return;
 
 
-            BoxCollider collider = ladder.m_collider;
+            BoxCollider collider = ladder.GetCollider();
             if (collider == null)
             {
-                ladder.m_collider = collider= ladder.GetComponent<BoxCollider>();
+                ladder.SetCollider(collider = ladder.GetComponent<BoxCollider>());
             }
 
             float height = LadderUtility.CalculateLadderHeight(ladder);
