@@ -116,14 +116,19 @@ namespace GTFO.DevTools.Utilities
 
         public static IMarkerDataBlock GetDataBlockForProducer(LG_MarkerProducer producer)
         {
-            switch (producer.MarkerDataBlockType)
+            if (!producer.TryGetMarkerBlockInfo(out LG_MarkerDataBlockType blockType, out uint blockID))
+            {
+                return null;
+            }
+
+            switch (blockType)
             {
                 case LG_MarkerDataBlockType.Service:
-                    return GTFOGameConfig.Rundown.DataBlocks.ServiceMarker.GetBlockByID(producer.MarkerDataBlockID);
+                    return GTFOGameConfig.Rundown.DataBlocks.ServiceMarker.GetBlockByID(blockID);
                 case LG_MarkerDataBlockType.Mining:
-                    return GTFOGameConfig.Rundown.DataBlocks.MiningMarker.GetBlockByID(producer.MarkerDataBlockID);
+                    return GTFOGameConfig.Rundown.DataBlocks.MiningMarker.GetBlockByID(blockID);
                 case LG_MarkerDataBlockType.Tech:
-                    return GTFOGameConfig.Rundown.DataBlocks.TechMarker.GetBlockByID(producer.MarkerDataBlockID);
+                    return GTFOGameConfig.Rundown.DataBlocks.TechMarker.GetBlockByID(blockID);
             }
             return null;
         }
