@@ -6,6 +6,7 @@ using System.Reflection;
 using GameData;
 using Localization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using UnityEditor;
 using UnityEngine;
 
@@ -249,6 +250,8 @@ namespace GTFO.DevTools
         protected abstract void DoSaveAtPath(string path);
         protected abstract void DoUnload();
 
+        public abstract BasicBlockInfo[] GetBasicBlocks();
+
         public string GetBlockPath(string folderPath)
         {
             return Path.Combine(folderPath, "GameData_" + this.BlockName + "_bin.json");
@@ -293,6 +296,28 @@ namespace GTFO.DevTools
         }
     }
 
+    public struct BasicBlockInfo
+    {
+        public readonly string blockTypeName;
+        public readonly string name;
+        public readonly uint persistentID;
+        public readonly bool internalEnabled;
+
+        public BasicBlockInfo(string blockTypeName, string name, uint persistentID, bool internalEnabled)
+        {
+            this.name = name;
+            this.persistentID = persistentID;
+            this.internalEnabled = internalEnabled;
+            this.blockTypeName = blockTypeName;
+        }
+
+        public static BasicBlockInfo From<TBlock>(TBlock block)
+            where TBlock : GameDataBlockBase<TBlock>
+        {
+            return new BasicBlockInfo(typeof(TBlock).Name, block.name, block.persistentID, block.internalEnabled);
+        }
+    }
+
     public class GTFODataBlockInfo<TBlock> : GTFODataBlockLoadable
         where TBlock : GameDataBlockBase<TBlock>
     {
@@ -309,6 +334,8 @@ namespace GTFO.DevTools
         public override string BlockName => typeof(TBlock).Name;
 
         public TBlock[] GetBlocks() => this.m_blocksByID.Values.OrderBy((b) => b.persistentID).ToArray();
+        public override BasicBlockInfo[] GetBasicBlocks()
+            => this.GetBlocks().Select((block) => BasicBlockInfo.From<TBlock>(block)).ToArray();
 
         public GameDataBlockWrapper<TBlock> Data => this.Loaded ? this.m_wrapper : null;
         public TBlock GetBlockByID(uint id) => this.m_blocksByID.TryGetValue(id, out TBlock block) ? block : default;
@@ -323,12 +350,12 @@ namespace GTFO.DevTools
 
         protected override void DoSaveAtPath(string path)
         {
-            this.WriteBlockContentsAtPath(path, JsonConvert.SerializeObject(this.Data, CellJSON.JSONSettings_GameData));
+            this.WriteBlockContentsAtPath(path, JsonConvert.SerializeObject(this.Data, JSONSettings_GameData));
         }
 
         protected override void DoLoadAtPath(string path)
         {
-            this.m_wrapper = JsonConvert.DeserializeObject<GameDataBlockWrapper<TBlock>>(this.GetBlockContentsAtPath(path), CellJSON.JSONSettings_GameData);
+            this.m_wrapper = JsonConvert.DeserializeObject<GameDataBlockWrapper<TBlock>>(this.GetBlockContentsAtPath(path), JSONSettings_GameData);
 
             this.VerifyLatestPersistentID();
 
@@ -396,15 +423,18 @@ namespace GTFO.DevTools
 
             return false;
         }
-    }
 
-    public static class FuckYouExtensions
-    {
-        public static string TranslateText(this LocalizedText localizedDumbass, GTFORundownDataBlocks datablocks)
+        public static readonly JsonSerializerSettings JSONSettings_GameData = new JsonSerializerSettings()
         {
-            if (!localizedDumbass.HasTranslation)
-                return localizedDumbass.UntranslatedText;
-            return datablocks.Text.GetBlockByID(localizedDumbass.Id)?.English ?? "";
-        }
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Include,
+            Formatting = Formatting.Indented,
+            Converters = new JsonConverter[]
+            {
+                new ColorConverter(),
+                new StringEnumConverter()
+            }
+        };
     }
 }

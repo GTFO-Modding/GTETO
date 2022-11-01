@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using GTFO.DevTools.Windows;
+using UnityEditor;
 using UnityEngine;
 
 namespace GTFO.DevTools.PropertyDrawers
@@ -17,12 +18,11 @@ namespace GTFO.DevTools.PropertyDrawers
                 Rect contentRect = indentedPosition;
                 contentRect.width = 50f;
                 contentRect.center += new Vector2(itemRect.width, 0f);
-                
-                property.intValue = EditorGUI.IntField(itemRect, label, property.intValue);
+
+                EditorGUI.PropertyField(itemRect, property);
                 if (GUI.Button(contentRect, "Select"))
                 {
                     var prop = property.Copy();
-                    // todo: select data block
                     var datablockType = ((GameDataBlockDropdownAttribute)this.attribute).BlockType;
 
                     SelectDataBlockWindow.ShowWindow((uint)prop.intValue, prop, property.serializedObject, datablockType);
@@ -31,7 +31,7 @@ namespace GTFO.DevTools.PropertyDrawers
             }
             else
             {
-                EditorGUI.LabelField(position, label.text, "Use TextAreaDrawer with string.");
+                EditorGUI.LabelField(position, label.text, "GameDataBlockDropdownPropertyDrawer may only be used on int/uint fields");
             }
         }
     }
